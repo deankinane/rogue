@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="gas-pump.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#111111"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="true"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.52070356"
+     inkscape:cx="256.38388"
+     inkscape:cy="738.42398"
+     inkscape:window-width="2560"
+     inkscape:window-height="1377"
+     inkscape:window-x="-8"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="rect846"
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.756;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       d="M 188.97656 0 C 84.283649 1.8947806e-14 0 84.283649 0 188.97656 L 0 933.54297 C 1.8947806e-14 1038.2359 84.283649 1122.5195 188.97656 1122.5195 L 604.72461 1122.5195 C 709.41752 1122.5195 793.70117 1038.2359 793.70117 933.54297 L 793.70117 188.97656 C 793.70117 84.283649 709.41752 0 604.72461 0 L 188.97656 0 z M 226.77148 188.97656 L 566.92969 188.97656 C 608.80685 188.97656 642.51953 222.68924 642.51953 264.56641 L 642.51953 351.26172 C 642.51953 393.13888 608.80685 426.85352 566.92969 426.85352 L 226.77148 426.85352 C 184.89432 426.85352 151.18164 393.13888 151.18164 351.26172 L 151.18164 264.56641 C 151.18164 222.68924 184.89432 188.97656 226.77148 188.97656 z "
+       transform="scale(0.26458333)" />
+    <rect
+       style="fill:#000000;stroke-width:0.756;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       id="rect848"
+       width="0"
+       height="0"
+       x="0"
+       y="0"
+       transform="scale(0.26458333)" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.200025;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       id="rect1326"
+       width="210"
+       height="60"
+       x="0"
+       y="237" />
+  </g>
+</svg>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="9.1999998mm"
+   height="9.1999998mm"
+   viewBox="0 0 9.1999998 9.1999998"
+   version="1.1"
+   id="svg9252"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="favicon.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview9254"
+     pagecolor="#818181"
+     bordercolor="#333333"
+     borderopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="true"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="16"
+     inkscape:cx="12.28125"
+     inkscape:cy="7.96875"
+     inkscape:window-width="2560"
+     inkscape:window-height="1377"
+     inkscape:window-x="-8"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs9249" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       sodipodi:type="star"
+       style="fill:#552c87;fill-opacity:1;stroke-width:0.756;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       id="path8769"
+       inkscape:flatsided="true"
+       sodipodi:sides="3"
+       sodipodi:cx="11.411641"
+       sodipodi:cy="6.1076388"
+       sodipodi:r1="21.248722"
+       sodipodi:r2="10.708892"
+       sodipodi:arg1="0.52617829"
+       sodipodi:arg2="1.5733758"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       transform="matrix(0.24997365,-6.8084039e-4,6.4208805e-4,0.23636433,1.7435113,4.4191021)"
+       inkscape:transform-center-x="0.047914588"
+       inkscape:transform-center-y="-1.2136605"
+       d="M 29.786107,16.779433 -7.0176364,16.684497 11.466452,-15.141013 Z" />
+  </g>
+</svg>

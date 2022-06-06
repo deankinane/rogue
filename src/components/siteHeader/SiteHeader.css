@@ -1,0 +1,39 @@
+.header-wrapper {
+  padding: 0 1em;
+  background-color: #ffffff0f;
+  box-shadow: 0 6px 15px 0 rgb(0 0 0 / 28%);
+}
+
+.header {
+  padding: 0.7em 0 !important;
+}
+
+.header__logo {
+  color: #fff;  
+  display: flex;
+  height: 100%;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.header__logo img {
+  height: 2em;
+}
+
+.header .navbar-nav a {
+  color: #fff !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  padding: 0 1em;
+  margin-right: 1em;
+  font-weight: 300;
+}
+
+.header .navbar-nav a:hover {
+  color: rgb(71 231 17) !important;
+}
+
+.header .navbar-nav a svg {
+  margin-top: -1px;
+  margin-right: 1em;
+}

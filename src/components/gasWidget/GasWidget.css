@@ -1,0 +1,22 @@
+.gas-widget__gwei {
+  font-weight: bold;
+  line-height: 1em;
+  height: 1em;
+}
+
+.gas-widget__icon {
+  height: 1em;
+}
+
+.gas-widget__input {
+  text-align: center;
+}
+
+.gas-widget__input--active {
+  background: #8341d3 !important;
+}
+
+.gas-widget__input::-webkit-inner-spin-button, 
+.gas-widget__input::-webkit-outer-spin-button {  
+   opacity: 1;
+}

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="51.998001mm"
+   height="7.5349998mm"
+   viewBox="0 0 51.998002 7.5349998"
+   version="1.1"
+   id="svg8494"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="rogue_logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8496"
+     pagecolor="#878787"
+     bordercolor="#282828"
+     borderopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="true"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="8"
+     inkscape:cx="20.9375"
+     inkscape:cy="-33.8125"
+     inkscape:window-width="2560"
+     inkscape:window-height="1377"
+     inkscape:window-x="-8"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs8491" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       aria-label="ROGUE"
+       transform="matrix(0.99868486,0,0,1.0013169,13.935177,1.3178037e-5)"
+       id="text2878"
+       style="font-weight:600;font-size:10.5694px;line-height:1.25;font-family:'SYN Nova';-inkscape-font-specification:'SYN Nova Semi-Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;stroke-width:0.264235">
+      <path
+         d="M 5.337548,1.194329 V 4.2277468 H 6.605876 V -1.3160706e-5 H 1.0809898e-6 V 7.3985667 H 1.2683291 V 1.194329 Z M 3.5196112,3.149668 2.642351,4.0374976 6.0456978,7.5253995 6.922958,6.6375699 Z"
+         id="path8452" />
+      <path
+         d="M 14.723172,-1.3160706e-5 H 8.0433112 V 7.3985667 H 14.723172 Z M 13.454844,6.2042245 H 9.3116392 V 1.194329 h 4.1432048 z"
+         id="path8454" />
+      <path
+         d="m 17.238669,1.194329 h 5.411533 V -1.3160706e-5 H 15.970341 V 7.3985667 h 6.679861 V 3.4350418 h -1.268328 v 2.7691827 h -4.143205 z"
+         id="path8456" />
+      <path
+         d="M 29.308903,-1.3160706e-5 V 6.2042245 H 25.165698 V -1.3160706e-5 H 23.89737 V 7.3985667 h 6.679861 V -1.3160706e-5 Z"
+         id="path8458" />
+      <path
+         d="M 38.113192,1.194329 V -1.3160706e-5 H 31.824399 V 7.3985667 h 6.288793 V 6.2042245 H 33.092727 V 4.1960386 h 4.957049 V 3.0016964 H 33.092727 V 1.194329 Z"
+         id="path8460" />
+    </g>
+    <path
+       sodipodi:type="star"
+       style="fill:#ffffff;stroke-width:0.756;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       id="path8769"
+       inkscape:flatsided="true"
+       sodipodi:sides="3"
+       sodipodi:cx="11.411641"
+       sodipodi:cy="6.1076388"
+       sodipodi:r1="21.248722"
+       sodipodi:r2="10.708892"
+       sodipodi:arg1="0.52617829"
+       sodipodi:arg2="1.5733758"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="M 29.786107,16.779433 -7.0176364,16.684497 11.466452,-15.141013 Z"
+       transform="matrix(0.24997397,-5.5066782e-4,5.193093e-4,0.23637164,1.745562,3.5853078)"
+       inkscape:transform-center-x="0.0492405"
+       inkscape:transform-center-y="-1.2138324" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2" />
+</svg>

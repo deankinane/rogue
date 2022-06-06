@@ -1,0 +1,24 @@
+.function__value__type {
+  color: rgba(255, 255, 255, 0.5);
+  margin-left:1em;
+}
+
+.function-card {
+  border: 1px solid #6741af6b;
+  background-color: #ffffff05;
+  box-shadow: 0 6px 15px 0 rgb(0 0 0 / 28%);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  background-clip: border-box;
+  border-radius: 0.25rem;
+  margin-right: 1em;
+  margin-bottom: 1em;
+  padding: 1em;
+  font-size: 0.8rem;
+}
+
+.function-card__value {
+  margin: 0 0 0 1em;
+  text-align: right;
+  flex-grow: 1;
+}

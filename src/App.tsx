@@ -1,57 +1,32 @@
 import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
+import MintForm from './app/mintPage/MintPage';
+import SiteHeader from './components/siteHeader/SiteHeader';
+import { Col, Container, Row } from 'react-bootstrap';
+import {  Route, Routes } from 'react-router-dom';
+import WalletPage from './app/walletPage/WalletPage';
 import './App.css';
 
+
 function App() {
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
-    </div>
+    <>
+      <Container fluid className='p-0'>
+        <div className='header-wrapper'>
+          <SiteHeader/>
+        </div>
+        
+      </Container>
+  
+      <Container className='flex-grow-1 d-flex flex-column'>
+        <Routes>
+          <Route path="/wallets" element={<WalletPage />} />
+          <Route path="/mint" element={<MintForm />} />
+          <Route path="/tasks"element={<div/>} />
+          <Route path="/settings"element={<div/>} />
+        </Routes>
+      </Container>
+    </>
   );
 }
 

@@ -1,0 +1,7 @@
+.table-header {
+  border-bottom: 1px solid #ccc;
+}
+
+.table-header__p {
+  font-weight: normal;  
+} 

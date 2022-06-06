@@ -1,0 +1,21 @@
+.mint-status-modal {
+  width: 80%;
+}
+
+.mint-status-modal__wallet-container {
+  border: 1px solid #ffffff17;
+  border-radius: 0.25em;
+}
+
+.mint-status-modal__wallet-container__title {
+  padding: 1em;
+  border-bottom:  1px solid #ffffff17;
+  font-size: 0.8rem;
+}
+.mint-status-modal__wallet-container__title p {
+  font-weight: normal;
+}
+
+.mint-status-modal__icon {
+  height: 1em;
+}

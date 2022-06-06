@@ -1,0 +1,20 @@
+.transaction-status-widget-icon {
+  height: 1em;
+}
+
+.state-pending {
+  color: rgb(255, 193, 6) !important
+  
+}
+
+.state-complete {
+  background-color: #258206
+}
+
+.state-failed {
+  background-color: red;
+}
+
+.transaction-status-widget img {
+  width: 1.5em;
+}
