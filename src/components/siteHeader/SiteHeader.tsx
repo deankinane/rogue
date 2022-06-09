@@ -1,5 +1,5 @@
 import { Nav, Navbar } from 'react-bootstrap';
-import { Calendar, FiletypeJpg, Gear, PlayBtn, Wallet } from 'react-bootstrap-icons';
+import { Calendar, Gear, Triangle, Wallet } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
 import WalletConnectionWidget from '../walletConnectionWidget/WalletConnectionWidget';
 import './SiteHeader.css';
@@ -21,7 +21,7 @@ export default function SiteHeader() {
       <Navbar.Collapse id="basic-navbar-nav" className='flex-grow-0'>
         <Nav className="me-auto" variant="pills" >
           <Link to="/wallets"><Wallet />Wallets</Link>
-          <Link to="/mint"><FiletypeJpg />Mint</Link>
+          <Link to="/mint"><Triangle />Mint</Link>
           <Link to="/tasks"><Calendar />Tasks</Link>
           <Link to="/settings" className='mr-3'><Gear />Settings</Link>
         </Nav>

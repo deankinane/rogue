@@ -1,3 +1,4 @@
+import { BigNumber, ethers } from 'ethers';
 import React, {  useState } from 'react'
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { LightningChargeFill } from 'react-bootstrap-icons';
@@ -29,7 +30,7 @@ function GasWidget({onGasPriceChanged} : GasWidgetProps) {
 
   return (
     <>
-      <InputGroup className="mb-3">
+      <InputGroup className="mb-1">
         <InputGroup.Text>
           <img className='gas-widget__icon' alt="gas-icon" src='./img/gas-pump.svg' />
           <span className='gas-widget__gwei ms-2'>Fast: {gwei}</span>
@@ -60,6 +61,7 @@ function GasWidget({onGasPriceChanged} : GasWidgetProps) {
           </span>
         </InputGroup.Text>
       </InputGroup>
+      <p className='gas-widget__estimate'>Estimate per txn: {ethers.utils.formatUnits(BigNumber.from((gwei+extraGas)*100000), 'gwei')} ETH</p>
     </>
   )
 }

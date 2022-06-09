@@ -1,17 +1,27 @@
 import INodeRecord from "../entities/INodeRecord";
 
-export default function useNodeStorage(): [INodeRecord[], (Nodes: INodeRecord[]) => void] {
-  const ROGUE_STORAGE_NODES = 'ROGUE_STORAGE_NodeS';
+export default function useNodeStorage(): [INodeRecord | undefined, (Node: INodeRecord) => void] {
+  const ROGUE_STORAGE_NODE = 'ROGUE_STORAGE_NODE';
 
-  function setNodes(Nodes: INodeRecord[]) {
-    localStorage.setItem(ROGUE_STORAGE_NODES, JSON.stringify(Nodes));
+  function setNode(node: INodeRecord) {
+    localStorage.setItem(ROGUE_STORAGE_NODE, JSON.stringify(node));
   }
-  let Nodes: INodeRecord[] = [];
+  let node: INodeRecord | undefined;
 
-  const NodeStorageJson = localStorage.getItem(ROGUE_STORAGE_NODES);
+  const NodeStorageJson = localStorage.getItem(ROGUE_STORAGE_NODE);
   if (NodeStorageJson !== null) {
-    Nodes = JSON.parse(NodeStorageJson);
+    node = JSON.parse(NodeStorageJson);
   }
   
-  return [Nodes, setNodes];
+  return [node, setNode];
+  
+  // return [[{
+  //   url: 'wss://api.zmok.io/mainnet/fxikwb62uoromzop',
+  //   chainId: 1
+  // }], setNodes];
+
+  //  return [[{
+  //   url: 'wss://api.zmok.io/testnet/3ki5uxoqm3thlxyl',
+  //   chainId: 4
+  // }], setNodes]
 }

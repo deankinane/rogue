@@ -1,20 +1,23 @@
 import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
 import { Contract, ethers } from "ethers";
 import { TransactionState } from "./GlobalState";
+import INodeRecord from "./INodeRecord";
 import IWalletRecord from "./IWalletRecord";
 import MintContract from "./MintContract";
 
-// const rpc: string = 'wss://frosty-floral-snowflake.quiknode.pro/249e9db0c811c7e63ee4c5d2f2d4065898c7a9af/';
-const rpc: string = 'wss://damp-frosty-sky.rinkeby.quiknode.pro/df6200ad29cf299fe6c18eb67a2eca5ebd4f3abf/';
+async function getReadValue(mintContract : MintContract, func:string, node: INodeRecord) : Promise<any> {
+  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
 
-async function getReadValue(mintContract : MintContract, func:string) : Promise<any> {
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
-  
   if (!mintContract.abi) throw new Error("Error loading contract");
 
-  const contract = new Contract(mintContract.address, mintContract.abi, signer)
-  return await contract.functions[func]();
+  const contract = new Contract(mintContract.address, mintContract.abi, provider)
+  return contract.functions[func]();
+}
+
+async function getWalletBalance(address:string, node: INodeRecord) : Promise<any> {
+  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);  
+  const balance = await provider.getBalance(address)
+  return ethers.utils.formatEther(balance);
 }
 
 export interface TransactionRequestGroup {
@@ -22,21 +25,28 @@ export interface TransactionRequestGroup {
   transactions: TransactionRequest[]
 }
 
-async function prepareTransactions (mintContract: MintContract, settings: TransactionState) : Promise<TransactionRequestGroup[]> {
+async function prepareTransactions (mintContract: MintContract, settings: TransactionState, node: INodeRecord) : Promise<TransactionRequestGroup[]> {
   if (!(settings.mintFunction && settings.contractAddress
-    && settings.functionParams && settings.maxGasFee && settings.selectedWallets
+    && settings.unitsPerTxn && settings.maxGasFee && settings.selectedWallets
     && settings.transactionsPerWallet &&  mintContract.abi)) {
 
       throw new Error("Invalid Transactions Configuration");
   }
+  
   if(settings.maxGasFee < 0) settings.maxGasFee = 1;
   
-  console.log(settings.selectedWallets)
   const result = new Array<TransactionRequestGroup>();
+  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
 
-  const provider = new ethers.providers.WebSocketProvider(rpc);
+  const totalMintCost = ethers.utils.parseEther(`${settings.pricePerUnit || 0}`).mul(settings.unitsPerTxn);
+  
+  const params = new Array<any>();
+  params.push(settings.unitsPerTxn);
 
-  const params = settings.mintFunction.inputs.map(i => settings.functionParams?.get(i.name));
+  settings.mintFunction.inputs.forEach((x,i) => {
+    if(i>0) params.push(settings.functionParams?.get(x.name));
+  })
+  
   const data = mintContract.abi.encodeFunctionData(settings.mintFunction, params);
   const txnsPerWallet = settings.transactionsPerWallet || 1;
 
@@ -49,16 +59,16 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
     const gasLimit = await wallet.estimateGas({
       to: settings.contractAddress, 
       data: data,
-      value: ethers.utils.parseEther(`${settings.totalCost}`)
+      value: totalMintCost
     });
   
     for(let i=0; i<txnsPerWallet; i++) {
       transactions.push({
         to: settings.contractAddress,
-        value: ethers.utils.parseEther(`${settings.totalCost}`),
+        value: totalMintCost,
         nonce: base_nonce + i,
         data: data,
-        chainId: window.ethereum.networkVersion,
+        chainId: node.chainId,
         type: 2,
         gasLimit: gasLimit.mul(11).div(10),
         maxFeePerGas: ethers.utils.parseUnits(`${settings.maxGasFee}`, "gwei"),
@@ -80,8 +90,8 @@ export interface PendingTransactionGroup {
   transactions: Promise<TransactionResponse>[]
 }
 
-async function sendTransactions(groups: TransactionRequestGroup[]) : Promise<PendingTransactionGroup[]> {
-  const provider = new ethers.providers.WebSocketProvider(rpc);
+async function sendTransactions(groups: TransactionRequestGroup[], node:INodeRecord) : Promise<PendingTransactionGroup[]> {
+  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
   const result = new Array<PendingTransactionGroup>();
 
   for(let g=0; g<groups.length; g++) {
@@ -102,4 +112,4 @@ async function sendTransactions(groups: TransactionRequestGroup[]) : Promise<Pen
 }
 
 
-export {getReadValue, prepareTransactions, sendTransactions};
+export {getReadValue, prepareTransactions, sendTransactions, getWalletBalance};

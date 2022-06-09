@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import MintContract from "../../entities/MintContract";
 import ContractSearchBar from "../../components/contractSearchBar/ContractSearchBar";
 import FunctionSelector from "../../components/functionSelector/FunctionSelector";
@@ -6,30 +6,59 @@ import ViewableFunctionDetail from "../../components/viewableFunctionDetail/View
 import CodeBlock from "../../components/codeBlock/CodeBlock";
 import { Button, Card, Col, Form, InputGroup, Row } from "react-bootstrap";
 import GasWidget from "../../components/gasWidget/GasWidget";
-import { TransactionState } from "../../entities/GlobalState";
+import { defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
 import { FunctionFragment } from "ethers/lib/utils";
 import WalletSelector from "../../components/walletSelector/WalletSelector";
 import IWalletRecord from "../../entities/IWalletRecord";
-import { FiletypeJpg } from "react-bootstrap-icons";
-import { PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
+import { Triangle } from "react-bootstrap-icons";
+import { getWalletBalance, PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
 import MintStatusModal from "../../components/mintStatusModal/MintStatusModal";
+import useNodeStorage from "../../hooks/useNodeStorage";
+import { BigNumber, ethers } from "ethers";
+import useWalletStorage from "../../hooks/useWalletStorage";
+import useOnMount from "../../hooks/useOnMount";
 
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
-  const [transactionState, setTransactionState] = useState<TransactionState>({});
-  const [sentTransactionSettings, setSentTransactionSettings] = useState<TransactionState>({});
+  const [wallets, setWallets] = useWalletStorage();
+
+  const [transactionState, setTransactionState] = useState<TransactionState>({
+    ...defaultTransactionState,
+    selectedWallets: [wallets[0]],
+  });
+  const [sentTransactionSettings, setSentTransactionSettings] = useState<TransactionState>(defaultTransactionState);
   const [sentTransactionRequests, setSentTransactionRequests] = useState<TransactionRequestGroup[]>(new Array<TransactionRequestGroup>());
   const [loading, setLoading] = useState(false);  
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>())
   const [showMintStatusModal, setShowMintStatusModal] = useState(false);
+  const [node] =  useNodeStorage();
+  const [totalCost, setTotalCost] = useState('');
+  
+  useOnMount(async () => {
+    document.title = 'ROGUE - Mint NFTs FAST'
+    if(node) {
+      for(let i=0; i<wallets.length; i++) {
+        wallets[i].balance = await getWalletBalance(wallets[i].publicKey, node)
+      }
+      setWallets(wallets);
+    }
+  })
 
-  function updateTransactionState(t: TransactionState) {
+  function updateTransactionState(t: TransactionStateUpdate) {
     setTransactionState({
       ...transactionState,
       ...t
     });
   }
+
+  useEffect(() => {
+    const total = ethers.utils.parseEther(`${transactionState.pricePerUnit * transactionState.unitsPerTxn 
+    * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}`);
+    const gas = ethers.utils.parseUnits(`${transactionState.maxGasFee * transactionState.transactionsPerWallet * 100000}`, 'gwei');
+    const result = ethers.utils.formatEther(total.add(gas));
+    setTotalCost(parseFloat(result).toFixed(4))
+  },[transactionState])
 
   function onSearchContract(address: string) {
     setLoading(true);
@@ -40,6 +69,7 @@ export default function MintPage() {
       updateTransactionState({
         contractAddress: newContract.address
       });
+      document.title = `${newContract.contractName} - ROGUE - Mint NFTs FAST`
       setLoading(false);
     });
   }
@@ -64,9 +94,15 @@ export default function MintPage() {
     });
   }
 
-  function onMintCostChanged(e: ChangeEvent<HTMLInputElement>) {
+  function onUnitsPerTxnChanged(e: ChangeEvent<HTMLInputElement>) {
     updateTransactionState({
-      totalCost: parseFloat(e.currentTarget.value)
+      unitsPerTxn: parseInt(e.currentTarget.value)
+    });
+  } 
+
+  function onPricePerUnitChanged(e: ChangeEvent<HTMLInputElement>) {
+    updateTransactionState({
+      pricePerUnit: parseFloat(e.currentTarget.value)
     });
   } 
 
@@ -76,25 +112,37 @@ export default function MintPage() {
     });
   } 
 
-  function onExtraGasChanged(gas: number) {
+  function onGasFeeChanged(gas: number) {
     updateTransactionState({
       maxGasFee: gas
     });
   } 
 
-  async function mint() {
+  function onSetUnitPriceClicked(value: string) {
+    updateTransactionState({
+      pricePerUnit: parseFloat(ethers.utils.formatEther(BigNumber.from(value)))
+    });
+  }
 
+  function onSetUnitsPerTxnClicked(value: string) {
+    updateTransactionState({
+      unitsPerTxn: parseInt(value)
+    });
+  }
+
+  async function mint() {
+    if(!node) return //TODO display error
     if (!contract || !transactionState.selectedWallets) return; //TODO Display error
 
-    const txns = await prepareTransactions(contract, transactionState);
-
+    const txns = await prepareTransactions(contract, transactionState, node);
+    console.log(txns)
     if (txns.length === 0) {
       console.log('Failed to create txns', txns)
       return;
       // TODO display error
     }
 
-    const responses = await sendTransactions(txns);
+    const responses = await sendTransactions(txns, node);
 
     if (responses.length === 0) {
       console.log('Failed to send txns')
@@ -104,72 +152,7 @@ export default function MintPage() {
 
     setSentTransactionRequests(txns)
     setSentTransactionSettings(transactionState);
-    setPendingTransactions(responses);
-
-    // const testTrans = new Array<PendingTransactionGroup>();
-    // testTrans.push({
-    //   wallet: transactionState.selectedWallets[0],
-    //   transactions: new Array<Promise<TransactionResponse>>()
-    // })
-
-    // testTrans[0].transactions.push(new Promise<TransactionResponse>(resolve => {
-    //   setTimeout(() => {
-    //     resolve({
-    //       chainId: 2,
-    //       hash: 'xxxx',
-    //       data: 'data',
-    //       confirmations: 5,
-    //       from: 'from',
-    //       nonce: 100,
-    //       gasLimit: BigNumber.from(30000),
-    //       value: BigNumber.from(1),
-    //       wait: (confirmations?: number) => new Promise<TransactionReceipt>(res => {
-    //         setTimeout(() => {
-    //           res({
-    //             blockHash : '',
-    //             byzantium: true,
-    //             confirmations: 5,
-    //             contractAddress: '0x000',
-    //             blockNumber: 10000,
-    //             cumulativeGasUsed: BigNumber.from(30000),
-    //             effectiveGasPrice: BigNumber.from(30000),
-    //             from: '0x000',
-    //             gasUsed: BigNumber.from(30000),
-    //             logs: new Array<Log>(),
-    //             logsBloom: '',
-    //             to: '0x000',
-    //             transactionHash: '',
-    //             transactionIndex: 0,
-    //             type: 2
-    //           })
-    //         }, 10000)
-    //       })
-    //     })
-    //   },10000)
-    // }))
-
-    // testTrans[0].transactions.push(new Promise<TransactionResponse>(resolve => {
-    //   setTimeout(() => {
-    //     resolve({
-    //       chainId: 2,
-    //       hash: 'xxxx',
-    //       data: 'data',
-    //       confirmations: 5,
-    //       from: 'from',
-    //       nonce: 100,
-    //       gasLimit: BigNumber.from(30000),
-    //       value: BigNumber.from(1),
-    //       wait: (confirmations?: number) => new Promise<TransactionReceipt>((res,rej) => {
-    //         setTimeout(() => {
-    //           rej('')
-    //         },10000)
-    //       })
-    //     })
-    //   },10000)
-    // }))
-
-    // setPendingTransactions(testTrans);
-    
+    setPendingTransactions(responses);    
     setShowMintStatusModal(true);
   }
 
@@ -187,7 +170,7 @@ export default function MintPage() {
     />
     <Row className='mb-3'>
         <Col>
-          <h5 className='fw-bold mb-0'><FiletypeJpg className='me-3' />Mint</h5>
+          <h5 className='fw-bold mb-0'><Triangle className='me-3' />Mint</h5>
         </Col>
         <Col>
           <h5 className='fw-bold float-end'>{contract ? contract.contractName : 'No Contract Loaded'}</h5>
@@ -206,7 +189,7 @@ export default function MintPage() {
           <div className="clearfix"></div>
           <p className="mt-3">Select Mint Function</p>
             <FunctionSelector 
-              functions={contract?.payables} 
+              functions={contract?.payables && contract?.payables.length > 0 ? contract?.payables : contract?.writables} 
               onFunctionSelected={onMintFunctionSelected}
             />
           
@@ -217,36 +200,64 @@ export default function MintPage() {
       <Col>
         <Card className="h-100">
           <Card.Body>
-            <p>Set Transaction Parameters</p>
+            <p className="mb-0">Set Transaction Parameters</p>
+            <Row className="g-3">
+              <Col xs={12} md={6}>
+                <InputGroup className="mt-3">
+                  <InputGroup.Text>Mints per Txn</InputGroup.Text>
+                  <Form.Control type="number" step={1} value={transactionState.unitsPerTxn} onChange={onUnitsPerTxnChanged} />
+                </InputGroup>
+              </Col>
+              <Col xs={12} md={6}>
+                <InputGroup className="mt-3">
+                  <InputGroup.Text>Txns per Wallet</InputGroup.Text>
+                  <Form.Control type="number" value={transactionState.transactionsPerWallet} onChange={onTxnsPerWalletChanged} />
+                </InputGroup>
+              </Col>
+              <Col xs={12}>
+                <InputGroup>
+                  <InputGroup.Text>Price per Mint</InputGroup.Text>
+                  <Form.Control type="number" step={0.005} placeholder="ether" value={transactionState.pricePerUnit} onChange={onPricePerUnitChanged} />
+                </InputGroup>
+              </Col>
+            </Row>
+            
             {
-              transactionState.mintFunction?.inputs.map((x,i) => 
-              (<InputGroup key={i} className="mt-3">
-                <InputGroup.Text className="mw-30">{x.name}</InputGroup.Text>
-                <Form.Control placeholder={x.type} type={x.type.startsWith('uint') ? 'number' : 'text'} onChange={v => onMintFunctionParamChanged(x.name, v.currentTarget.value)} />
-              </InputGroup>))
+              transactionState.mintFunction?.inputs && transactionState.mintFunction?.inputs.length>1 ? (
+                <>
+                  <p>Additional Function Parameters</p>
+                  {transactionState.mintFunction?.inputs.map((x,i) => 
+                    (i>0 ? (
+                      <InputGroup key={i} className="mt-3">
+                        <InputGroup.Text className="mw-30">{x.name}</InputGroup.Text>
+                        <Form.Control placeholder={x.type} type={x.type.startsWith('uint') ? 'number' : 'text'} onChange={v => onMintFunctionParamChanged(x.name, v.currentTarget.value)} />
+                      </InputGroup>)
+                    :<></>
+                    )
+                  )}
+                </>
+              )
+              : <></> 
             }
-            <InputGroup className="mt-3">
-              <InputGroup.Text className=" mw-30">Price per txn</InputGroup.Text>
-              <Form.Control type="number" step={0.005} placeholder="ether" onChange={onMintCostChanged} />
-            </InputGroup>
-            <InputGroup className="mt-3">
-              <InputGroup.Text className="mw-30">Txns per wallet</InputGroup.Text>
-              <Form.Control type="number" onChange={onTxnsPerWalletChanged} />
-            </InputGroup>
+            <p className="mt-3">Choose Gas Settings</p>
+            <GasWidget onGasPriceChanged={onGasFeeChanged}/>
           </Card.Body>
         </Card>
       </Col>
       <Col>
         <Card className="h-100">
           <Card.Body className="d-flex flex-column">
-            <div>
-              <p>Choose Gas Settings</p>
-              <GasWidget onGasPriceChanged={onExtraGasChanged}/>
+            <div>              
               <p>Select Wallets</p>
-              <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged}/>   
+              <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged} wallets={wallets}/>   
             </div>
+            <p className="mt-3">Mint Summary</p>
+            <InputGroup>
+              <InputGroup.Text>Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
+              <InputGroup.Text>Total: {totalCost} ETH</InputGroup.Text>
+            </InputGroup>
             <div className="flex-grow-1 d-flex justify-content-end">
-            <Button 
+              <Button 
                 variant="secondary" 
                 className="mt-3 align-self-end me-3" 
                 disabled={contract === undefined}
@@ -268,7 +279,7 @@ export default function MintPage() {
         <div className="d-flex flex-row overflow-auto">
         {
           contract
-            ? contract.viewables.map((x,i) => <ViewableFunctionDetail key={i} functionFragment={x} contract={contract} />)
+            ? contract.viewables.map((x,i) => <ViewableFunctionDetail key={i} functionFragment={x} contract={contract} onSetUnitPriceClicked={onSetUnitPriceClicked} onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked} />)
             : <Card className="w-100 p-3">Read only values will display here</Card>
         }
         </div>        

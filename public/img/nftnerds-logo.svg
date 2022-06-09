@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 25.2.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 512 512"
+   xml:space="preserve"
+   sodipodi:docname="nftnerds-logo.svg"
+   width="512"
+   height="512"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs848" /><sodipodi:namedview
+   id="namedview846"
+   pagecolor="#8c8c8c"
+   bordercolor="#666666"
+   borderopacity="1.0"
+   inkscape:pageshadow="2"
+   inkscape:pageopacity="0"
+   inkscape:pagecheckerboard="true"
+   showgrid="false"
+   showguides="false"
+   units="px"
+   inkscape:zoom="1.1416016"
+   inkscape:cx="30.220701"
+   inkscape:cy="116.06501"
+   inkscape:window-width="2560"
+   inkscape:window-height="1377"
+   inkscape:window-x="-8"
+   inkscape:window-y="32"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="g843" />
+<style
+   type="text/css"
+   id="style837">
+	.st0{fill:#8965D3;}
+</style>
+<path
+   style="fill:#ffffff;stroke-width:37.7953;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+   id="path952"
+   sodipodi:type="arc"
+   sodipodi:cx="256"
+   sodipodi:cy="256"
+   sodipodi:rx="256"
+   sodipodi:ry="256"
+   sodipodi:start="6.2703571"
+   sodipodi:end="6.2687689"
+   sodipodi:open="true"
+   sodipodi:arc-type="arc"
+   d="M 511.97894,252.71608 A 256,256 0 0 1 259.38556,511.97761 256,256 0 0 1 0.0237522,259.4872 256,256 0 0 1 252.41116,0.02515701 256,256 0 0 1 511.9734,252.30952" /><g
+   id="g843"
+   transform="matrix(0.70422535,0,0,0.70422535,75.71831,75.71831)">
+	<polygon
+   class="st0"
+   points="177.3,102.3 0.4,204 0.4,308 177.3,409.7 354.3,308 354.3,204 287.7,165.8 269.6,176.2 336.1,214.4 336.1,297.6 177.3,388.8 18.5,297.6 18.5,214.4 177.3,123.2 224.3,150.1 242.4,139.7 "
+   id="polygon839"
+   style="stroke-width:14.20000004;stroke-miterlimit:4;stroke-dasharray:none;stroke:#8965d3;stroke-opacity:1" />
+	<polygon
+   class="st0"
+   points="493.5,297.6 334.7,388.8 287.7,361.9 269.6,372.3 334.7,409.7 511.6,308 511.6,204 334.7,102.3 157.7,204 157.7,308 224.3,346.2 242.4,335.8 175.9,297.6 175.9,214.4 334.7,123.2 493.5,214.4 "
+   id="polygon841"
+   style="stroke:#8965d3;stroke-opacity:1;stroke-width:14.20000004;stroke-miterlimit:4;stroke-dasharray:none" />
+</g>
+<g
+   inkscape:groupmode="layer"
+   id="layer1"
+   inkscape:label="Layer 1" /></svg>

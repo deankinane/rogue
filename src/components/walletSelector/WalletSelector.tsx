@@ -1,33 +1,34 @@
-import React, { ChangeEvent, useState } from 'react'
+import { ethers } from 'ethers';
+import React, { ChangeEvent, useEffect, useRef } from 'react'
 import { Col, Form, Row } from 'react-bootstrap';
 import IWalletRecord from '../../entities/IWalletRecord'
 import useOnMount from '../../hooks/useOnMount';
-import useWalletStorage from '../../hooks/useWalletStorage'
 import './WalletSelector.css'
 
 export interface WalletSelectorProps {
+  wallets: IWalletRecord[]
   onWalletSelectionChanged: (selectedWallets: IWalletRecord[]) => void
 }
 
-function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
-  const [wallets] = useWalletStorage();
-  let selectedWallets = new Array<IWalletRecord>();
+function WalletSelector({wallets, onWalletSelectionChanged}:WalletSelectorProps) {
+  const selectedWallets = useRef(new Array<IWalletRecord>());
 
-  useOnMount(() => {
-    selectedWallets.push(wallets[0]);
-    onWalletSelectionChanged(selectedWallets)
-  })
-  
+  useEffect(() => {
+    if(wallets.length > 0 && selectedWallets.current.length === 0) {
+      selectedWallets.current.push(wallets[0]);
+      onWalletSelectionChanged(selectedWallets.current)
+    }
+  }, [wallets])
 
   function onCheckStateChanged(e: ChangeEvent<HTMLInputElement>, w: IWalletRecord) {
     if (e.currentTarget.checked) {
-      selectedWallets.push(w);
+      selectedWallets.current.push(w);
     }
     else {
-      selectedWallets = selectedWallets.filter(x => x.name !== w.name);
+      selectedWallets.current = selectedWallets.current.filter(x => x.name !== w.name);
     }
 
-    onWalletSelectionChanged(selectedWallets);
+    onWalletSelectionChanged(selectedWallets.current);
   }
 
   return (
@@ -42,7 +43,7 @@ function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
                 onChange={e => onCheckStateChanged(e, w)}
                 label={w.name}
               />
-              <p className='text-end flex-grow-1 mb-0 text-secondary'>{w.publicKey.substring(0,6)+'...'}</p>
+              <p className='text-end flex-grow-1 mb-0 text-secondary'>{parseFloat(w.balance.toString()).toFixed(3)}</p>
             </div>
           </Col>
         ))}

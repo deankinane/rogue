@@ -4,6 +4,7 @@ import { PlusCircleFill, Wallet } from 'react-bootstrap-icons';
 import AddWalletModal from '../../components/addWalletModal/AddWalletModal';
 import WalletRecord from '../../components/walletRecord/WalletRecord'
 import IWalletRecord from '../../entities/IWalletRecord';
+import useOnMount from '../../hooks/useOnMount';
 import useWalletStorage from '../../hooks/useWalletStorage';
 import './WalletPage.css';
 
@@ -11,6 +12,10 @@ function WalletPage() {
   const [addWalletModalVisible, setAddWalletModalVisible] = useState(false);
   const [wallets, setWallets] = useWalletStorage();
 
+  useOnMount(() => {
+    document.title = 'ROGUE - Mint NFTs FAST'
+  })
+  
   function onAddWalletClick() {
     setAddWalletModalVisible(true);
   }

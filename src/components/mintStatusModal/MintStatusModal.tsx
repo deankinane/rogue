@@ -34,7 +34,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   const [resubmitting, setResubmitting] = useState(false);
   const [complete, setComplete] = useState(false);
   const [provider, setProvider] = useState<ethers.providers.WebSocketProvider>();
-  const [nodes] = useNodeStorage();
+  const [node] = useNodeStorage();
   const gasThreshold = useRef(BigNumber.from(0));
   const [txnCounts, setTxnCounts] = useState<TransactionCounts>({
     complete: 0,
@@ -67,33 +67,38 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   },[pendingTransactionGroups])
 
   function onShown() {
-    console.log('Creating provider', nodes[1].url)
-    const prov = new ethers.providers.WebSocketProvider(nodes[1].url);
-    prov.on('pending', (tx) => {
-      console.log('txn processed')
-      prov.getTransaction(tx).then((txn) => analyseTransaction(txn));
-    });
+    if(!node) return; //TODO something better
+    if(node.wssUrl.startsWith('ws')) {
+      const prov = new ethers.providers.WebSocketProvider(node.wssUrl);
+      prov.on('pending', (tx) => {
+        prov.getTransaction(tx).then((txn) => analyseTransaction(txn));
+      });
 
-    setProvider(prov);
-    setComplete(false);
+      setProvider(prov);
+      
+      gasDistUpdateInterval.current = setInterval(() => {
+        const sorted = gasDistribution.current.slice();
+        sorted.sort((x,y) => x-y);
+
+        const _99 = Math.min(Math.ceil(sorted.length * 0.99), sorted.length-1)
+        const _90 = Math.min(Math.ceil(sorted.length * 0.90), sorted.length-1)
+        const _75 = Math.min(Math.ceil(sorted.length * 0.75), sorted.length-1)
+        const _50 = Math.min(Math.ceil(sorted.length * 0.50), sorted.length-1)
+        const dist = {
+          _50: sorted[_50]+1,
+          _75: sorted[_75]+1,
+          _90: sorted[_90]+1,
+          _99: sorted[_99]+1,
+        };
+        setGasDistLevels(dist);
+
+        console.log(sorted);
+        console.log(dist);
+        console.log('--------------');
+      },2000)
+    }
     
-    gasDistUpdateInterval.current = setInterval(() => {
-      const sorted = gasDistribution.current.slice();
-      sorted.sort();
-
-      const _99 = Math.min(Math.ceil(sorted.length * 0.99), sorted.length-1)
-      const _90 = Math.min(Math.ceil(sorted.length * 0.90), sorted.length-1)
-      const _75 = Math.min(Math.ceil(sorted.length * 0.75), sorted.length-1)
-      const _50 = Math.min(Math.ceil(sorted.length * 0.50), sorted.length-1)
-      const dist = {
-        _50: sorted[_50]+1,
-        _75: sorted[_75]+1,
-        _90: sorted[_90]+1,
-        _99: sorted[_99]+1,
-      };
-      setGasDistLevels(dist);
-
-    },1000)
+    setComplete(false);
   }
 
   function closeModal() {
@@ -103,28 +108,16 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
 
 
   function analyseTransaction(txn: TransactionResponse) {
-   // TODO only count txns to the mint contract
-
-    if(txn) {
-      txnCounts.total++;
+  
+    if(txn && txn.to === settings.contractAddress) {
+      setTxnCounts(c => { c.total++; return c; });
       if(txn.maxPriorityFeePerGas) {
         gasDistribution.current.push(parseInt(ethers.utils.formatUnits(txn.maxPriorityFeePerGas, 'gwei')));
 
         if( txn.maxPriorityFeePerGas > gasThreshold.current) {
-          txnCounts.higherGas++;
+          setTxnCounts(c => { c.higherGas++; return c; });
         }
       }
-      
-  
-      setTxnCounts(txnCounts);
-      txn.wait().then(r => {
-        txnCounts.complete++;
-        setTxnCounts(txnCounts);
-      })
-      .catch(() => {
-        txnCounts.failed++;
-        setTxnCounts(txnCounts);
-      })
     }
     
   }
@@ -135,6 +128,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   }, 2000);
 
   async function speedUpTransactions() {
+    if(!node) return //TODO something beter
     setResubmitting(true);
     transactionRequestGroups.forEach(g => {
       g.transactions.forEach(t => {
@@ -144,7 +138,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
     });
 
     try {
-      const resent = await sendTransactions(transactionRequestGroups);
+      const resent = await sendTransactions(transactionRequestGroups, node);
       setPendingTransactions(resent);
     } catch (error) {
       // TODO display message that they couldn't be resent as already being processed
@@ -156,7 +150,6 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   function resetState() {
     if(provider) {
       provider.removeAllListeners('pending');
-      console.log('unsubscribed')
     }
 
     clearInterval(gasDistUpdateInterval.current);
@@ -169,22 +162,19 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   
   function onTxnComplete(rec?: TransactionReceipt) {
     if(rec) {
-      console.log('complete')
       completeCount.current++;
     }
     else{
-      console.log('failed')
       failedCount.current++;
     }
 
-    console.log('complete:', completeCount.current+failedCount.current, '/', transactionCount )
     if (completeCount.current+failedCount.current === transactionCount) {
       setComplete(true);
       if(provider) {
         provider.removeAllListeners('pending');
-        console.log('unsubscribed')
       }
       clearInterval(gasDistUpdateInterval.current);
+      console.log('stopped')
     }
   }
 
@@ -237,7 +227,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
             <div key={i} className='mint-status-modal__wallet-container'>
               <div className="mint-status-modal__wallet-container__title d-flex">
                 <p className='mb-0'>{g.wallet.name} - {g.wallet.publicKey.substring(0,6)}</p>
-                <p className='text-end flex-grow-1 mb-0'>0.45 ETH</p>
+                <p className='text-end flex-grow-1 mb-0'>{`${g.wallet.balance} ETH`}</p>
               </div>
               <Row className='g-2 p-2'>
                 {g.transactions.map((t,j) => (

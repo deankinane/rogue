@@ -5,6 +5,7 @@ import { Col, Container, Row } from 'react-bootstrap';
 import {  Route, Routes } from 'react-router-dom';
 import WalletPage from './app/walletPage/WalletPage';
 import './App.css';
+import SettingsPage from './app/settingsPage/SettingsPage';
 
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
           <Route path="/wallets" element={<WalletPage />} />
           <Route path="/mint" element={<MintForm />} />
           <Route path="/tasks"element={<div/>} />
-          <Route path="/settings"element={<div/>} />
+          <Route path="/settings"element={<SettingsPage />} />
         </Routes>
       </Container>
     </>

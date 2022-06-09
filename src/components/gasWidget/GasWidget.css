@@ -20,3 +20,8 @@
 .gas-widget__input::-webkit-outer-spin-button {  
    opacity: 1;
 }
+
+.gas-widget__estimate {
+  font-size: 0.8rem;
+  text-align: end;
+}

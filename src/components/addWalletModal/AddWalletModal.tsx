@@ -1,7 +1,9 @@
-import { ethers } from 'ethers';
-import React, { ChangeEvent, useState } from 'react'
+import { BigNumber, ethers } from 'ethers';
+import React, { useState } from 'react'
 import { Button, Form, Modal, ModalProps } from 'react-bootstrap'
 import IWalletRecord from '../../entities/IWalletRecord'
+import { getWalletBalance } from '../../entities/ProviderFunctions';
+import useNodeStorage from '../../hooks/useNodeStorage';
 import useWalletStorage from '../../hooks/useWalletStorage';
 
 
@@ -13,8 +15,9 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
   const [wallets, setWallets] = useWalletStorage();
   const [walletName, setWalletName] = useState("");
   const [privateKey, setPrivateKey] = useState("");
+  const [node] = useNodeStorage();
 
-  function onAddButtonClicked() {
+  async function onAddButtonClicked() {
     wallets.forEach(w => {
       if(w.name === walletName){
         // TODO show error message
@@ -27,8 +30,13 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
     const newWallet: IWalletRecord = {
       name: walletName,
       privateKey: privateKey,
-      publicKey: etherWallet.address
+      publicKey: etherWallet.address,
+      balance: BigNumber.from(0)
     };
+
+    if (node) {
+      newWallet.balance = await getWalletBalance(etherWallet.address, node);
+    }
 
     wallets.push(newWallet);
     setWallets(wallets);
@@ -53,9 +61,9 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
         
           <Form.Group className="mb-3">
             <Form.Label>Wallet Name</Form.Label>
-            <Form.Control required onChange={e => setWalletName(e.currentTarget.value)}/>
+            <Form.Control maxLength={12} required onChange={e => setWalletName(e.currentTarget.value)}/>
             <Form.Text className="text-muted">
-              Enter a unique name for this wallet
+              Enter a unique name for this wallet (max 12 characters)
             </Form.Text>
           </Form.Group>
 
