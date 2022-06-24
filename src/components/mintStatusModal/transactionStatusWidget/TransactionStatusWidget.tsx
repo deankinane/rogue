@@ -4,7 +4,6 @@ import './TransactionStatusWidget.css';
 import { InputGroup, Spinner } from 'react-bootstrap';
 import { CheckCircleFill, X } from 'react-bootstrap-icons';
 import { ethers } from 'ethers';
-import getCurrentGas from '../../../entities/GasNowApi';
 
 export interface TransactionStatusWidgetProps extends PropsWithChildren<any> {
   transaction: Promise<TransactionResponse>
@@ -23,7 +22,6 @@ function TransactionStatusWidget({transaction, callback}:TransactionStatusWidget
   const [receipt, setReceipt] = useState<TransactionReceipt>();
   const [status, setStatus] = useState(TransactionState.Submitted);
   const [gasUsedEth, setGasUsedEth] = useState('');
-  const [gasUsedUsd, setGasUsedUsd] = useState('');
   const complete = useRef(false);
 
   useEffect(() => {
@@ -37,9 +35,6 @@ function TransactionStatusWidget({transaction, callback}:TransactionStatusWidget
         setReceipt(rec);
         const ethUsed = parseFloat(ethers.utils.formatEther(rec.effectiveGasPrice.mul(rec.gasUsed)));
         setGasUsedEth(ethUsed.toFixed(5));
-        getCurrentGas().then(v => {
-          setGasUsedUsd((ethUsed * v.price).toFixed(2));
-        })
         setStatus(TransactionState.Complete);
         callback(rec);
       })
@@ -63,7 +58,7 @@ function TransactionStatusWidget({transaction, callback}:TransactionStatusWidget
         {status === TransactionState.Pending ? (
             <>
               <InputGroup.Text className={`flex-grow-1 ${status}`}><Spinner animation="border" size="sm" className='me-3'/>Pending...</InputGroup.Text>
-              <InputGroup.Text>{`Gas: ${response?.maxPriorityFeePerGas}`}</InputGroup.Text>
+              <InputGroup.Text>{`Nonce: ${response?.nonce}`}</InputGroup.Text>
             </>
         ) : <></>}
         {status === TransactionState.Complete ? (
@@ -72,7 +67,7 @@ function TransactionStatusWidget({transaction, callback}:TransactionStatusWidget
                 <CheckCircleFill className='transaction-status-widget-icon me-2'/>
                 Complete
               </InputGroup.Text>
-              <InputGroup.Text>Gas Used: {gasUsedEth} ETH (${gasUsedUsd})</InputGroup.Text>
+              <InputGroup.Text>{`Nonce: ${response?.nonce}`}</InputGroup.Text>
               <InputGroup.Text>
                 <a href={`https://etherscan.io/tx/${receipt?.transactionHash}`} target='_blank' rel='noreferrer'><img src='./img/etherscan-logo-light-circle.svg' alt='Etherscan link'/></a>
               </InputGroup.Text>

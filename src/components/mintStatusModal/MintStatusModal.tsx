@@ -1,16 +1,18 @@
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
-import { Button, Col, FormControl, InputGroup, Modal, Row, Spinner } from 'react-bootstrap'
+import { Button, Card, Col, FormControl, InputGroup, Modal, Row, Spinner } from 'react-bootstrap'
 import { PendingTransactionGroup, sendTransactions, TransactionRequestGroup } from '../../entities/ProviderFunctions'
 import TransactionStatusWidget from './transactionStatusWidget/TransactionStatusWidget'
 import './MintStatusModal.css';
-import getCurrentGas from '../../entities/GasNowApi';
+import getCurrentGas, { EthGasPrice } from '../../entities/GasNowApi';
 import useRecursiveTimeout from '../../hooks/useRecursiveTimeout';
-import {  LightningChargeFill } from 'react-bootstrap-icons';
+import {  ExclamationCircleFill, FlagFill, LightningChargeFill } from 'react-bootstrap-icons';
 import { TransactionState } from '../../entities/GlobalState';
-import { BigNumber, ethers } from 'ethers';
-import TransactionMonitorWidget, { TransactionCounts } from './transactionMonitorWidget/TransactionMonitorWidget';
+import { ethers } from 'ethers';
 import useNodeStorage from '../../hooks/useNodeStorage';
-import { TransactionResponse, TransactionReceipt } from '@ethersproject/providers';
+import { TransactionReceipt } from '@ethersproject/providers';
+import Blocknative from 'bnc-sdk';
+import { Emitter, EthereumTransactionData } from 'bnc-sdk/dist/types/src/interfaces';
+import { BLOCKNATIVE_APPID } from '../../entities/constants';
 
 export interface MintStatusModalProps extends PropsWithChildren<any> {
   show: boolean
@@ -21,43 +23,43 @@ export interface MintStatusModalProps extends PropsWithChildren<any> {
 }
 
 interface GasDistributionLevels {
-  _50: number
-  _75: number
+  _70: number
+  _80: number
   _90: number
-  _99: number
+  _100: number
+}
+
+interface TxnGasSettings {
+  max: number
+  priority: number
 }
 
 function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransactionGroups, settings}:MintStatusModalProps) {
-  const [gwei, setGwei] = useState(0);
+  const [gwei, setGwei] = useState<EthGasPrice>({base:0, max:0});
   const [newGas, setNewGas] = useState(0);
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>());
   const [resubmitting, setResubmitting] = useState(false);
   const [complete, setComplete] = useState(false);
-  const [provider, setProvider] = useState<ethers.providers.WebSocketProvider>();
   const [node] = useNodeStorage();
-  const gasThreshold = useRef(BigNumber.from(0));
-  const [txnCounts, setTxnCounts] = useState<TransactionCounts>({
-    complete: 0,
-    failed: 0,
-    higherGas: 0,
-    total: 0
-  });
   const [transactionCount, setTransactionCount] = useState(0);
   const completeCount = useRef(0);
   const failedCount = useRef(0);
-  const gasDistribution = useRef(new Array<number>());
+  const gasDistribution = useRef(new Array<TxnGasSettings>());
   const gasDistUpdateInterval = useRef<NodeJS.Timer>();
   const [gasDistLevels, setGasDistLevels] = useState<GasDistributionLevels>({
-    _50: 0,
-    _75 :0,
+    _70: 0,
+    _80 :0,
     _90: 0,
-    _99: 0
+    _100: 0
   });
+  const blocknative = useRef<Blocknative>();
+  const txnEmitter = useRef<Emitter>();
+  const [effPrioFee, setEffPrioFee] = useState(0);
+  const [currentlyBeating, setCurrentlyBeating] = useState(0);
 
   useEffect(() => {
     if(settings.maxGasFee) {
-      setNewGas(Math.ceil(settings.maxGasFee * 1.5))
-      gasThreshold.current = ethers.utils.parseUnits(`${settings.maxGasFee}`, 'gwei');
+      setNewGas(settings.maxGasFee)
     }
     setTransactionCount((settings.selectedWallets?.length || 0) * (settings.transactionsPerWallet || 0));
   },[settings])
@@ -67,38 +69,51 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   },[pendingTransactionGroups])
 
   function onShown() {
-    if(!node) return; //TODO something better
-    if(node.wssUrl.startsWith('ws')) {
-      const prov = new ethers.providers.WebSocketProvider(node.wssUrl);
-      prov.on('pending', (tx) => {
-        prov.getTransaction(tx).then((txn) => analyseTransaction(txn));
-      });
 
-      setProvider(prov);
-      
-      gasDistUpdateInterval.current = setInterval(() => {
-        const sorted = gasDistribution.current.slice();
-        sorted.sort((x,y) => x-y);
+    blocknative.current = new Blocknative({
+      dappId: BLOCKNATIVE_APPID,
+      networkId: 1,
+      onerror: e => console.log('error', e)
+    });
 
-        const _99 = Math.min(Math.ceil(sorted.length * 0.99), sorted.length-1)
-        const _90 = Math.min(Math.ceil(sorted.length * 0.90), sorted.length-1)
-        const _75 = Math.min(Math.ceil(sorted.length * 0.75), sorted.length-1)
-        const _50 = Math.min(Math.ceil(sorted.length * 0.50), sorted.length-1)
-        const dist = {
-          _50: sorted[_50]+1,
-          _75: sorted[_75]+1,
-          _90: sorted[_90]+1,
-          _99: sorted[_99]+1,
-        };
-        setGasDistLevels(dist);
+    const account = blocknative.current.account(settings.contractAddress)
+    txnEmitter.current = account.emitter;
 
-        console.log(sorted);
-        console.log(dist);
-        console.log('--------------');
-      },2000)
-    }
+    txnEmitter.current.on("txPool", txn => {
+      analyseTransaction(txn as EthereumTransactionData)
+    })
+    
+    gasDistUpdateInterval.current = setInterval(updateGasProbabilityEstimates,2000)
     
     setComplete(false);
+  }
+
+  function updateGasProbabilityEstimates() {
+    if(gasDistribution.current.length === 0) return;
+
+    const sorted = gasDistribution.current.map(x => getEPF(x.max, x.priority))
+    sorted.sort((x, y) => x - y);
+
+    const _100 = sorted.length-1;
+    const _90 = Math.min(Math.ceil(sorted.length * 0.90), sorted.length - 1);
+    const _80 = Math.min(Math.ceil(sorted.length * 0.80), sorted.length - 1);
+    const _70 = Math.min(Math.ceil(sorted.length * 0.70), sorted.length - 1);
+
+    const dist = {
+      _70: Math.round(sorted[_70] + gwei.base + 1),
+      _80: Math.round(sorted[_80] + gwei.base + 1),
+      _90: Math.round(sorted[_90] + gwei.base + 1),
+      _100: Math.round(sorted[_100] + gwei.base + 1)
+    };
+    setGasDistLevels(dist);
+
+    const beating = sorted.filter(x => x < settings.maxGasFee);
+    setCurrentlyBeating((beating.length/sorted.length)*100);
+  }
+
+  function getEPF(maxFee: number, maxPriorityFee: number){
+    const feeOffset = maxFee - gwei.base;
+    return Math.min(feeOffset, maxPriorityFee);
   }
 
   function closeModal() {
@@ -107,24 +122,34 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   }
 
 
-  function analyseTransaction(txn: TransactionResponse) {
-  
-    if(txn && txn.to === settings.contractAddress) {
-      setTxnCounts(c => { c.total++; return c; });
-      if(txn.maxPriorityFeePerGas) {
-        gasDistribution.current.push(parseInt(ethers.utils.formatUnits(txn.maxPriorityFeePerGas, 'gwei')));
-
-        if( txn.maxPriorityFeePerGas > gasThreshold.current) {
-          setTxnCounts(c => { c.higherGas++; return c; });
-        }
-      }
-    }
+  function analyseTransaction(txn: EthereumTransactionData) {
     
+    if (txn.maxPriorityFeePerGasGwei && txn.maxFeePerGasGwei) {
+      gasDistribution.current.push({
+        max: txn.maxFeePerGasGwei,
+        priority: txn.maxPriorityFeePerGasGwei
+      });
+    }
   }
+  // function analyseTransaction(txn: TransactionResponse) {
+  
+  //   if(txn && txn.to === settings.contractAddress) {
+  //     setTxnCounts(c => { c.total++; return c; });
+  //     if(txn.maxPriorityFeePerGas) {
+  //       gasDistribution.current.push(parseInt(ethers.utils.formatUnits(txn.maxPriorityFeePerGas, 'gwei')));
+
+  //       if( txn.maxPriorityFeePerGas > gasThreshold.current) {
+  //         setTxnCounts(c => { c.higherGas++; return c; });
+  //       }
+  //     }
+  //   }
+    
+  // }
 
   useRecursiveTimeout(async() => {
     const gasprice = await getCurrentGas();
-    setGwei(gasprice.gas);
+    setGwei(gasprice);
+    setEffPrioFee(settings.maxGasFee - gasprice.base);
   }, 2000);
 
   async function speedUpTransactions() {
@@ -148,16 +173,15 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   }
 
   function resetState() {
-    if(provider) {
-      provider.removeAllListeners('pending');
-    }
+    txnEmitter.current?.off('txPool');
+    blocknative.current?.unsubscribe(settings.contractAddress)
 
     clearInterval(gasDistUpdateInterval.current);
     setPendingTransactions(new Array<PendingTransactionGroup>());
     setComplete(false);
     completeCount.current = 0;
     failedCount.current = 0;
-    gasDistribution.current = new Array<number>();
+    gasDistribution.current = new Array<TxnGasSettings>();
   }
   
   function onTxnComplete(rec?: TransactionReceipt) {
@@ -170,11 +194,9 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
 
     if (completeCount.current+failedCount.current === transactionCount) {
       setComplete(true);
-      if(provider) {
-        provider.removeAllListeners('pending');
-      }
+      txnEmitter.current?.off('txPool');
+      blocknative.current?.unsubscribe(settings.contractAddress)
       clearInterval(gasDistUpdateInterval.current);
-      console.log('stopped')
     }
   }
 
@@ -193,22 +215,41 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
       </Modal.Header>
       <Modal.Body>
         <div>
-          <TransactionMonitorWidget counts={txnCounts} />
           <Row>
             <Col>
-              <InputGroup className='mb-3 justify-content-end'>
-                <InputGroup.Text>
-                  <img className='gas-widget__icon' alt="gas-icon" src='./img/gas-pump.svg' />
-                  <span className='gas-widget__gwei ms-2'>{gwei}</span>
-                </InputGroup.Text>
-                <InputGroup.Text>50%</InputGroup.Text>
-                <Button variant='info' onClick={() => setNewGas(gasDistLevels._50)}>{gasDistLevels._50>0 ? gasDistLevels._50 : '?'} gwei</Button>
-                <InputGroup.Text>75%</InputGroup.Text>
-                <Button variant='info' onClick={() => setNewGas(gasDistLevels._75)}>{gasDistLevels._75>0 ? gasDistLevels._75 : '?'} gwei</Button>
+            <div className='modal-section'>
+              <div className="d-flex">
+                <div className='flex-grow-1'>
+                  <p className='modal-section__title mb-1'>Gas Optimizer</p>
+                  <p className='modal-info-text'>Currently beating {currentlyBeating}% of transactions</p>
+                </div>
+                <div>
+                  <InputGroup className='mb-3' size='lg'>
+                    <InputGroup.Text>
+                      <img className='gas-widget__icon' alt="gas-icon" src='./img/gas-pump.svg' />
+                      <span className='gas-widget__gwei ms-2'>Base: {gwei.base}</span>
+                    </InputGroup.Text>
+                    <InputGroup.Text>
+                      
+                      <span className='gas-widget__gwei ms-2'>Max: {settings.maxGasFee}</span>
+                    </InputGroup.Text>
+                    <InputGroup.Text>
+                      
+                      <span className='gas-widget__gwei ms-2'>EPF: {effPrioFee}</span>
+                    </InputGroup.Text>
+                  </InputGroup>
+                </div>
+              </div>
+              
+              <InputGroup className='justify-content-end'>
+                <InputGroup.Text>Beat 70%</InputGroup.Text>
+                <Button variant='info' onClick={() => setNewGas(gasDistLevels._70)}>{gasDistLevels._70>0 ? gasDistLevels._70 : '?'} gwei</Button>
+                <InputGroup.Text>80%</InputGroup.Text>
+                <Button variant='info' onClick={() => setNewGas(gasDistLevels._80)}>{gasDistLevels._80>0 ? gasDistLevels._80 : '?'} gwei</Button>
                 <InputGroup.Text>90%</InputGroup.Text>
                 <Button variant='info' onClick={() => setNewGas(gasDistLevels._90)}>{gasDistLevels._90>0 ? gasDistLevels._90 : '?'} gwei</Button>
-                <InputGroup.Text>99%</InputGroup.Text>
-                <Button variant='info' onClick={() => setNewGas(gasDistLevels._99)}>{gasDistLevels._99>0 ? gasDistLevels._99 : '?'} gwei</Button>
+                <InputGroup.Text>100%</InputGroup.Text>
+                <Button variant='info' onClick={() => setNewGas(gasDistLevels._100)}>{gasDistLevels._100>0 ? gasDistLevels._100 : '?'} gwei</Button>
                 <FormControl 
                   type='number' 
                   step={5}
@@ -216,22 +257,25 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
                   value={newGas}
                   onChange={v => setNewGas(parseInt(v.currentTarget.value))}
                 />
-                <Button variant='success' onClick={speedUpTransactions}>{resubmitting ? <Spinner size='sm' animation={'border'} /> : <><LightningChargeFill /> Speed Up</>}</Button>
+                <Button variant='success' disabled={newGas <= settings.maxGasFee} onClick={speedUpTransactions}>{resubmitting ? <Spinner size='sm' animation={'border'} /> : <><LightningChargeFill /> Speed Up</>}</Button>
               </InputGroup>
+            </div>
+
+              
             </Col>
           </Row>
           
         </div>
         <div>
           {pendingTransactions.map((g,i) => (
-            <div key={i} className='mint-status-modal__wallet-container'>
+            <div key={i} className='modal-section mt-3'>
               <div className="mint-status-modal__wallet-container__title d-flex">
-                <p className='mb-0'>{g.wallet.name} - {g.wallet.publicKey.substring(0,6)}</p>
+                <p className='mb-3'>{g.wallet.name} - {g.wallet.publicKey.substring(0,6)}</p>
                 <p className='text-end flex-grow-1 mb-0'>{`${g.wallet.balance} ETH`}</p>
               </div>
-              <Row className='g-2 p-2'>
+              <Row className='g-2'>
                 {g.transactions.map((t,j) => (
-                  <Col xs={6} key={j}><TransactionStatusWidget transaction={t} callback={onTxnComplete} /></Col>
+                  <Col xs={12} md={6} lg={4} key={j}><TransactionStatusWidget transaction={t} callback={onTxnComplete} /></Col>
                 ))}
               </Row>
             </div>

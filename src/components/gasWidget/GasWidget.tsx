@@ -2,7 +2,7 @@ import { BigNumber, ethers } from 'ethers';
 import React, {  useState } from 'react'
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { LightningChargeFill } from 'react-bootstrap-icons';
-import getCurrentGas from '../../entities/GasNowApi';
+import getCurrentGas, { EthGasPrice } from '../../entities/GasNowApi';
 import useRecursiveTimeout from '../../hooks/useRecursiveTimeout';
 import './GasWidget.css';
 
@@ -11,21 +11,18 @@ export interface GasWidgetProps {
 }
 
 function GasWidget({onGasPriceChanged} : GasWidgetProps) {
-  const [gwei, setGwei] = useState(0);
-  const [ethPrice, setEthPrice] = useState(0);
-  const [extraGas, setExtraGas] = useState(30);
+  const [gwei, setGwei] = useState<EthGasPrice>({base:0, max:0});
+  const [extraGas, setExtraGas] = useState(10);
 
   useRecursiveTimeout(async() => {
     const gasprice = await getCurrentGas();
-    setGwei(gasprice.gas);
-    setEthPrice(gasprice.price);
-
-    onGasPriceChanged(gwei+extraGas);
+    setGwei(gasprice);
+    onGasPriceChanged(gasprice.max+extraGas);
   }, 3000);
 
   function onExtraGasChanged(gas: number) {
     setExtraGas(gas);
-    onGasPriceChanged(gwei+extraGas);
+    onGasPriceChanged(gwei.max+extraGas);
   }
 
   return (
@@ -33,18 +30,18 @@ function GasWidget({onGasPriceChanged} : GasWidgetProps) {
       <InputGroup className="mb-1">
         <InputGroup.Text>
           <img className='gas-widget__icon' alt="gas-icon" src='./img/gas-pump.svg' />
-          <span className='gas-widget__gwei ms-2'>Fast: {gwei}</span>
+          <span className='gas-widget__gwei ms-2'>Fast: {gwei.max}</span>
         </InputGroup.Text>
         <Button 
           variant='info' 
-          onClick={() => onExtraGasChanged(15)} 
-          className={(extraGas === 15 ? ' gas-widget__input--active' : '')}
-          >+ 15</Button>
+          onClick={() => onExtraGasChanged(10)} 
+          className={(extraGas === 10 ? ' gas-widget__input--active' : '')}
+          >+ 10</Button>
         <Button 
           variant='info' 
-          onClick={() => onExtraGasChanged(30)} 
-          className={(extraGas === 30 ? ' gas-widget__input--active' : '')}
-          >+ 30</Button>
+          onClick={() => onExtraGasChanged(20)} 
+          className={(extraGas === 20 ? ' gas-widget__input--active' : '')}
+          >+ 20</Button>
         <FormControl 
           type='number' 
           step={5}
@@ -57,11 +54,19 @@ function GasWidget({onGasPriceChanged} : GasWidgetProps) {
             <LightningChargeFill />
           </span>
           <span className='gas-widget__gwei ms-1'>
-            Max: {gwei + extraGas}
+            Max: {gwei.max + extraGas}
           </span>
         </InputGroup.Text>
+        {/* <InputGroup.Text >
+          <span className='widget__icon'>
+            <FlagFill />
+          </span>
+          <span className='gas-widget__gwei ms-1'>
+            EPF: {extraGas}
+          </span>
+        </InputGroup.Text> */}
       </InputGroup>
-      <p className='gas-widget__estimate'>Estimate per txn: {ethers.utils.formatUnits(BigNumber.from((gwei+extraGas)*100000), 'gwei')} ETH</p>
+      <p className='gas-widget__estimate'>Estimate per txn: {ethers.utils.formatUnits(BigNumber.from((gwei.max+extraGas)*100000), 'gwei')} ETH</p>
     </>
   )
 }

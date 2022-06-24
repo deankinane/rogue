@@ -1,11 +1,12 @@
 import { BigNumber, ethers } from 'ethers';
-import React, { useState } from 'react'
-import { Button, Form, Modal, ModalProps } from 'react-bootstrap'
+import React, { FormEvent, useState } from 'react'
+import { Button, Form, Modal, ModalProps, Spinner } from 'react-bootstrap'
 import IWalletRecord from '../../entities/IWalletRecord'
 import { getWalletBalance } from '../../entities/ProviderFunctions';
 import useNodeStorage from '../../hooks/useNodeStorage';
 import useWalletStorage from '../../hooks/useWalletStorage';
-
+import useSignedIn from '../../hooks/useSignedIn';
+import SimpleCrypto from 'simple-crypto-js';
 
 interface AddWalletModalProps extends ModalProps {
   callback: (wallet?: IWalletRecord ) => void
@@ -15,21 +16,30 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
   const [wallets, setWallets] = useWalletStorage();
   const [walletName, setWalletName] = useState("");
   const [privateKey, setPrivateKey] = useState("");
+  const [working, setWorking] = useState(false);
   const [node] = useNodeStorage();
+  const [, signature] = useSignedIn();
 
-  async function onAddButtonClicked() {
+  async function onAddButtonClicked(e: FormEvent) {
+    e.preventDefault();
+
     wallets.forEach(w => {
       if(w.name === walletName){
         // TODO show error message
+        
         return;
       }
     });
 
+    setWorking(true);
     const etherWallet = new ethers.Wallet(privateKey);
+
+    const simpleCrypto = new SimpleCrypto(signature); 
+    const encrypted = simpleCrypto.encrypt(privateKey);
 
     const newWallet: IWalletRecord = {
       name: walletName,
-      privateKey: privateKey,
+      privateKey: encrypted,
       publicKey: etherWallet.address,
       balance: BigNumber.from(0)
     };
@@ -40,7 +50,9 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
 
     wallets.push(newWallet);
     setWallets(wallets);
+    setWorking(false);
     callback(newWallet);
+    
   }
 
   return (
@@ -77,7 +89,13 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
         
       </Modal.Body>
       <Modal.Footer>
-        <Button type='submit' variant='success'>Save Wallet</Button>
+        <Button 
+          type='submit' 
+          variant='success' 
+          style={{'width': '103px'}}
+          disabled={working}>
+            {working ? <Spinner size='sm' animation="border" /> : 'Save Wallet'}
+          </Button>
       </Modal.Footer>
       </Form>
     </Modal>

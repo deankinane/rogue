@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
+import useLocalStorage from "./useLocalStorage";
 
 export interface ConnectedWalletInfo {
   connected: boolean
@@ -8,34 +9,22 @@ export interface ConnectedWalletInfo {
 }
 
 export default function useWalletConnected(): [ConnectedWalletInfo, () => void] {
+
   const [walletInfo, setWalletInfo] = useState<ConnectedWalletInfo>({
     connected: false,
     chainId: undefined,
     address: undefined
   });
 
-  function connectWallet(prompt: boolean = true) {
-    const chainId = window.ethereum.networkVersion;
-    const address = window.ethereum.selectedAddress;
-    
+  function connectWallet() {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-    if (address !== null) {
-      setWalletInfo({
-        connected: true,
-        chainId: chainId,
-        address: address
-      });
-      return;
-    }
-
-    if (prompt) {
-      const info: ConnectedWalletInfo = {
+    const info: ConnectedWalletInfo = {
         connected: false,
-        chainId: chainId,
+        chainId: undefined,
         address: undefined
       };
-  
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      
       provider.send("eth_requestAccounts", [])
         .then(accounts => {
           if (accounts && accounts.length >= 1) {
@@ -44,11 +33,35 @@ export default function useWalletConnected(): [ConnectedWalletInfo, () => void] 
             setWalletInfo(info);
           }
         });
-    } 
   }
 
   useEffect(() => {
-    connectWallet();
+    
+    const checkIfConnected = async () => {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const accounts = await provider.send("eth_accounts", []);
+      if (accounts && accounts.length >= 1) {
+        const info: ConnectedWalletInfo = {
+          connected: true,
+          chainId: 1,
+          address: accounts[0]
+        };
+
+        setWalletInfo(info);
+      }
+      else {
+        const info: ConnectedWalletInfo = {
+          connected: false,
+          chainId: 1,
+          address: undefined
+        };
+
+        setWalletInfo(info);
+      }
+    }
+  
+    checkIfConnected();
+
   }, [])
   
   return [walletInfo, connectWallet];

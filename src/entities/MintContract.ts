@@ -22,8 +22,7 @@ class MintContract {
     const data = await getContractSource(this.address);
 
     if(!data.ContractName) {
-      //Display error toast
-      return;
+      throw new Error('Contract source code not verified')
     }
 
 

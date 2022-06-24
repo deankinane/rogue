@@ -1,7 +1,7 @@
 
 import { FunctionFragment } from "ethers/lib/utils"
 import { useEffect, useState } from "react";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 import { ArrowClockwise, Stack } from "react-bootstrap-icons";
 import MintContract from "../../entities/MintContract";
 import { getReadValue } from "../../entities/ProviderFunctions";
@@ -49,6 +49,14 @@ export default function ViewableFunctionDetail({contract, functionFragment, onSe
     setLoading(false);
   }
 
+  function getTooltip(message: string) {
+    return (
+      <Tooltip >
+          {message}
+      </Tooltip>
+    )
+  }
+
   return (
     <div className="function-card">
       <div className="d-flex">
@@ -56,13 +64,20 @@ export default function ViewableFunctionDetail({contract, functionFragment, onSe
         <p className="text-secondary pl-3 flex-grow-1 text-end">{type}</p>
       </div>
      <div className="d-flex align-items-center">
+      <OverlayTrigger placement="bottom" overlay={getTooltip('Refresh')}>
         <Button size="sm" variant="info" className="text-bold" onClick={loadValue} disabled={loading}>{loading ? <Spinner size="sm" animation="border" /> : <ArrowClockwise />}</Button>
+      </OverlayTrigger>
+        
         {type.startsWith('uint') ? (
           <>
-            <Button size="sm" variant='info' className='ms-2' onClick={() => onSetUnitPriceClicked(value)}>
-              <img src='img/eth-logo.svg' alt='Ethereum logo' style={{'width':'1em'}} />
+            <OverlayTrigger placement="bottom" overlay={getTooltip('Set Cost per Mint')}>
+              <Button size="sm" variant='info' className='ms-2' onClick={() => onSetUnitPriceClicked(value)}>
+                <img src='img/eth-logo.svg' alt='Ethereum logo' style={{'width':'1em'}} />
               </Button>
-            <Button size="sm" variant='info' className='ms-2' onClick={() => onSetUnitsPerTxnClicked(value)}><Stack/></Button>
+            </OverlayTrigger>
+            <OverlayTrigger placement="bottom" overlay={getTooltip('Set Units per Txn')}>
+              <Button size="sm" variant='info' className='ms-2' onClick={() => onSetUnitsPerTxnClicked(value)}><Stack/></Button>
+            </OverlayTrigger>
           </>
         ):<></>}
        <p className={`function-card__value ${oldValue ? 'function-card__value--old' : ''}`}>{value}</p>

@@ -11,4 +11,6 @@ enum FunctionTypes {
   view = "view"
 }
 
-export {FragmentTypes, FunctionTypes};
+const BLOCKNATIVE_APPID = "28a94756-d0c2-41d2-83f3-7a8faafa95b2";
+
+export {FragmentTypes, FunctionTypes, BLOCKNATIVE_APPID};

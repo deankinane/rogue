@@ -2,6 +2,10 @@
   height: 1em;
 }
 
+.transaction-status-widget {
+  border-radius: 0.25rem;
+}
+
 .state-pending {
   color: rgb(255, 193, 6) !important
   
@@ -18,3 +22,4 @@
 .transaction-status-widget img {
   width: 1.5em;
 }
+

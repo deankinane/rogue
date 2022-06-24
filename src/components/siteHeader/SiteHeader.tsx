@@ -10,20 +10,16 @@ export default function SiteHeader() {
     <Navbar expand="lg" className='header mb-5'>
       <Navbar.Brand className='flex-grow-1'>
           <div className="header__logo">
-            <img src="./img/rogue_logo.svg" alt="ROGUE Logo - Mint NFTs Fast" />
-            {/* <div className="header__logo__line"> ______  _____   ______ _     _ _______</div>
-            <div className="header__logo__line">|_____/ |     | |  ____ |     | |______</div>
-            <div className="header__logo__line">|    \_ |_____| |_____| |_____| |______</div>
-            <div className="header__logo__line"> </div> */}
+            <Link to="/"><img src="./img/rogue_logo.svg" alt="ROGUE Logo - Mint NFTs Fast" /></Link>
           </div>
       </Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav" className='flex-grow-0'>
         <Nav className="me-auto" variant="pills" >
-          <Link to="/wallets"><Wallet />Wallets</Link>
-          <Link to="/mint"><Triangle />Mint</Link>
-          <Link to="/tasks"><Calendar />Tasks</Link>
-          <Link to="/settings" className='mr-3'><Gear />Settings</Link>
+          <Link to="/wallets"><Wallet /><span>Wallets</span></Link>
+          <Link to="/mint"><Triangle /><span>Mint</span></Link>
+          <Link to="/tasks"><Calendar /><span>Tasks</span></Link>
+          <Link to="/settings" className='mr-3'><Gear /><span>Settings</span></Link>
         </Nav>
         <WalletConnectionWidget />
       </Navbar.Collapse>

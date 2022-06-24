@@ -14,7 +14,7 @@ export default function CodeBlock({code}: CodeBlockProps) {
   },[code]);
 
   return (
-    <div className="codeblock card-style flex-grow-1 mb-3">
+    <div className="codeblock card-style flex-grow-1">
       <pre className="h-100">
         <code className="codeblock__code language-solidity">
           {code}

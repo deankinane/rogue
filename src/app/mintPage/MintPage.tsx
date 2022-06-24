@@ -4,7 +4,7 @@ import ContractSearchBar from "../../components/contractSearchBar/ContractSearch
 import FunctionSelector from "../../components/functionSelector/FunctionSelector";
 import ViewableFunctionDetail from "../../components/viewableFunctionDetail/ViewableFunctionDetail"; 
 import CodeBlock from "../../components/codeBlock/CodeBlock";
-import { Button, Card, Col, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
 import GasWidget from "../../components/gasWidget/GasWidget";
 import { defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
 import { FunctionFragment } from "ethers/lib/utils";
@@ -17,11 +17,20 @@ import useNodeStorage from "../../hooks/useNodeStorage";
 import { BigNumber, ethers } from "ethers";
 import useWalletStorage from "../../hooks/useWalletStorage";
 import useOnMount from "../../hooks/useOnMount";
-
+import { useNavigate } from "react-router-dom";
+import useIsLicensed from "../../hooks/useIsLicensed";
+import useSignedIn from "../../hooks/useSignedIn";
+import useToast from "../../hooks/useToast";
+import ScheduleTaskModal from "../../components/scheduleTaskModal/ScheduleTaskModal";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
   const [wallets, setWallets] = useWalletStorage();
+  const licensed = useIsLicensed();
+  const [signedIn] = useSignedIn();
+  const navigate = useNavigate();
+  const [render, setRender] = useState(false);
+  const sendToast = useToast();
 
   const [transactionState, setTransactionState] = useState<TransactionState>({
     ...defaultTransactionState,
@@ -33,10 +42,13 @@ export default function MintPage() {
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>())
   const [showMintStatusModal, setShowMintStatusModal] = useState(false);
   const [node] =  useNodeStorage();
+  const [mintCost, setMintCost] = useState('');
   const [totalCost, setTotalCost] = useState('');
-  
+  const [minting, setMinting] = useState(false);
+  const [showScheduleTaskModal, setScheduleTaskModal] = useState(false);
+
   useOnMount(async () => {
-    document.title = 'ROGUE - Mint NFTs FAST'
+    document.title = 'ROGUE - Mint NFTs Fast'
     if(node) {
       for(let i=0; i<wallets.length; i++) {
         wallets[i].balance = await getWalletBalance(wallets[i].publicKey, node)
@@ -44,6 +56,12 @@ export default function MintPage() {
       setWallets(wallets);
     }
   })
+
+  useEffect(() => {
+    if (!licensed.checked) return;
+    if (!licensed.licensed || !signedIn) navigate('/');
+    setRender(true);
+  },[licensed, signedIn])
 
   function updateTransactionState(t: TransactionStateUpdate) {
     setTransactionState({
@@ -53,9 +71,13 @@ export default function MintPage() {
   }
 
   useEffect(() => {
-    const total = ethers.utils.parseEther(`${transactionState.pricePerUnit * transactionState.unitsPerTxn 
-    * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}`);
-    const gas = ethers.utils.parseUnits(`${transactionState.maxGasFee * transactionState.transactionsPerWallet * 100000}`, 'gwei');
+    if(isNaN(transactionState.pricePerUnit) || isNaN(transactionState.transactionsPerWallet) || isNaN(transactionState.unitsPerTxn))
+      return;
+    const totalRounded = (transactionState.pricePerUnit * transactionState.unitsPerTxn  * transactionState.transactionsPerWallet * transactionState.selectedWallets.length).toFixed(4);
+    const total = ethers.utils.parseEther(totalRounded);
+    const gas = ethers.utils.parseUnits(`${transactionState.maxGasFee * transactionState.transactionsPerWallet * transactionState.selectedWallets.length * 100000}`, 'gwei');
+    const mintCost = ethers.utils.formatEther(total); 
+    setMintCost(parseFloat(mintCost).toFixed(4));
     const result = ethers.utils.formatEther(total.add(gas));
     setTotalCost(parseFloat(result).toFixed(4))
   },[transactionState])
@@ -70,6 +92,10 @@ export default function MintPage() {
         contractAddress: newContract.address
       });
       document.title = `${newContract.contractName} - ROGUE - Mint NFTs FAST`
+      setLoading(false);
+    })
+    .catch((e:Error) => {
+      sendToast('Load Contract Failed', e.message, 'error');
       setLoading(false);
     });
   }
@@ -89,6 +115,7 @@ export default function MintPage() {
   }
 
   function onWalletSelectionChanged(selectedWallets: IWalletRecord[]) {
+  
     updateTransactionState({
       selectedWallets: selectedWallets
     });
@@ -130,36 +157,46 @@ export default function MintPage() {
     });
   }
 
+  function invalidConfiguration(): boolean {
+    return contract === undefined 
+      || transactionState.selectedWallets.length === 0
+      || transactionState.maxGasFee < 1
+      || transactionState.pricePerUnit < 0
+      || transactionState.transactionsPerWallet < 1
+      || transactionState.unitsPerTxn < 1
+      || isNaN(transactionState.maxGasFee)
+      || isNaN(transactionState.pricePerUnit)
+      || isNaN(transactionState.transactionsPerWallet)
+      || isNaN(transactionState.unitsPerTxn)
+      || transactionState.mintFunction === undefined
+  }
+
   async function mint() {
+    setMinting(true);
     if(!node) return //TODO display error
     if (!contract || !transactionState.selectedWallets) return; //TODO Display error
 
-    const txns = await prepareTransactions(contract, transactionState, node);
-    console.log(txns)
-    if (txns.length === 0) {
-      console.log('Failed to create txns', txns)
-      return;
-      // TODO display error
+    try {
+      const txns = await prepareTransactions(contract, transactionState, node);
+      const responses = await sendTransactions(txns, node);
+
+      setSentTransactionRequests(txns)
+      setPendingTransactions(responses);
+
+      setSentTransactionSettings(transactionState);
+      setShowMintStatusModal(true);
+    } catch (error) {
+      sendToast('Error', JSON.stringify(error), 'error')
     }
-
-    const responses = await sendTransactions(txns, node);
-
-    if (responses.length === 0) {
-      console.log('Failed to send txns')
-      return;
-      // TODO display error
-    }
-
-    setSentTransactionRequests(txns)
-    setSentTransactionSettings(transactionState);
-    setPendingTransactions(responses);    
-    setShowMintStatusModal(true);
+    setMinting(false);
   }
 
-
+  function scheduleTaskClicked() {
+    setScheduleTaskModal(true);
+  }
 
   return (
-
+    !render ? <></> : 
     <>
     <MintStatusModal 
       show={showMintStatusModal}
@@ -168,7 +205,13 @@ export default function MintPage() {
       settings={sentTransactionSettings}
       onHide={() => {setShowMintStatusModal(false)}}
     />
-    <Row className='mb-3'>
+    <ScheduleTaskModal 
+      show={showScheduleTaskModal}
+      settings={sentTransactionSettings}
+      onHide={() => {setScheduleTaskModal(false)}}
+      contract={contract}
+    />
+    <Row className='mb-3 g-2'>
         <Col>
           <h5 className='fw-bold mb-0'><Triangle className='me-3' />Mint</h5>
         </Col>
@@ -189,6 +232,7 @@ export default function MintPage() {
           <div className="clearfix"></div>
           <p className="mt-3">Select Mint Function</p>
             <FunctionSelector 
+              label="Mint Function"
               functions={contract?.payables && contract?.payables.length > 0 ? contract?.payables : contract?.writables} 
               onFunctionSelected={onMintFunctionSelected}
             />
@@ -201,23 +245,31 @@ export default function MintPage() {
         <Card className="h-100">
           <Card.Body>
             <p className="mb-0">Set Transaction Parameters</p>
-            <Row className="g-3">
-              <Col xs={12} md={6}>
-                <InputGroup className="mt-3">
-                  <InputGroup.Text>Mints per Txn</InputGroup.Text>
-                  <Form.Control type="number" step={1} value={transactionState.unitsPerTxn} onChange={onUnitsPerTxnChanged} />
-                </InputGroup>
-              </Col>
-              <Col xs={12} md={6}>
-                <InputGroup className="mt-3">
-                  <InputGroup.Text>Txns per Wallet</InputGroup.Text>
-                  <Form.Control type="number" value={transactionState.transactionsPerWallet} onChange={onTxnsPerWalletChanged} />
-                </InputGroup>
-              </Col>
-              <Col xs={12}>
+            <Row className="g-2 mt-2">
+              <Col xs={12} xl={6}>
                 <InputGroup>
-                  <InputGroup.Text>Price per Mint</InputGroup.Text>
-                  <Form.Control type="number" step={0.005} placeholder="ether" value={transactionState.pricePerUnit} onChange={onPricePerUnitChanged} />
+                  <InputGroup.Text>Mints per Txn</InputGroup.Text>
+                  <Form.Control type="number" min={1} step={1} value={transactionState.unitsPerTxn} onChange={onUnitsPerTxnChanged} />
+                </InputGroup>
+              </Col>
+              <Col xs={12} xl={6}>
+                <InputGroup>
+                  <InputGroup.Text>Txns per Wallet</InputGroup.Text>
+                  <Form.Control type="number" min={1} value={transactionState.transactionsPerWallet} onChange={onTxnsPerWalletChanged} />
+                </InputGroup>
+              </Col>
+            </Row>
+            <Row className="g-2 mt-2">
+              <Col xs={12} xl={6}>
+                <InputGroup>
+                  <InputGroup.Text>Cost per Mint</InputGroup.Text>
+                  <Form.Control type="number" min={0} step={0.005} placeholder="ether" value={transactionState.pricePerUnit} onChange={onPricePerUnitChanged} />
+                </InputGroup>
+              </Col>
+              <Col xs={12} xl={6}>
+                <InputGroup>
+                  <InputGroup.Text>Total</InputGroup.Text>
+                  <InputGroup.Text className="flex-grow-1 d-flex justify-content-end">{mintCost} ETH</InputGroup.Text>
                 </InputGroup>
               </Col>
             </Row>
@@ -252,22 +304,25 @@ export default function MintPage() {
               <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged} wallets={wallets}/>   
             </div>
             <p className="mt-3">Mint Summary</p>
-            <InputGroup>
-              <InputGroup.Text>Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
-              <InputGroup.Text>Total: {totalCost} ETH</InputGroup.Text>
+            <InputGroup className="justify-content-end">
+              <InputGroup.Text className="flex-grow-1">Total Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
+              <InputGroup.Text>Cost: {mintCost} ETH</InputGroup.Text>
+              <InputGroup.Text>Total: <span className="fw-bold ms-1">{totalCost} ETH</span></InputGroup.Text>
             </InputGroup>
             <div className="flex-grow-1 d-flex justify-content-end">
               <Button 
                 variant="secondary" 
                 className="mt-3 align-self-end me-3" 
                 disabled={contract === undefined}
+                onClick={scheduleTaskClicked}
               >Schedule Task</Button>   
               <Button 
+                style={{'width':'91px'}} 
                 variant="success" 
                 className="mt-3 align-self-end" 
-                disabled={contract === undefined}
+                disabled={invalidConfiguration() || minting}
                 onClick={mint}
-              >Mint Now</Button>    
+              >{minting ? <Spinner size='sm' animation="border" /> : 'Mint Now'}</Button>    
             </div>
                
           </Card.Body>

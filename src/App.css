@@ -34,3 +34,21 @@
 h5 svg {
   margin-top: -0.2em;
 }
+
+.toast--success {
+  background-color: #000000e0 !important
+}
+
+.toast--success .toast-header {
+  background-color: #4f9f35 !important;
+  color: #fff !important;
+}
+
+.toast--error {
+  background-color: #000000e0 !important
+}
+
+.toast--error .toast-header {
+  background-color: #9f3541 !important;
+  color: #fff !important;
+}

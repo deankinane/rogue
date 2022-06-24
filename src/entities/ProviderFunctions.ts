@@ -1,5 +1,7 @@
 import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
 import { Contract, ethers } from "ethers";
+import SimpleCrypto from "simple-crypto-js";
+import { ROGUE_SESSION_SIGNATURE } from "../hooks/useSignedIn";
 import { TransactionState } from "./GlobalState";
 import INodeRecord from "./INodeRecord";
 import IWalletRecord from "./IWalletRecord";
@@ -49,11 +51,13 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
   
   const data = mintContract.abi.encodeFunctionData(settings.mintFunction, params);
   const txnsPerWallet = settings.transactionsPerWallet || 1;
+  const sig = window.sessionStorage.getItem(ROGUE_SESSION_SIGNATURE);
+  const simpleCrypto = new SimpleCrypto(sig);
 
   for(let w=0; w<settings.selectedWallets.length; w++) {
     const transactions = new Array<TransactionRequest>();
   
-    const wallet = new ethers.Wallet(settings.selectedWallets[w].privateKey, provider);
+    const wallet = new ethers.Wallet(simpleCrypto.decrypt(settings.selectedWallets[w].privateKey).toString(), provider);
     const base_nonce = await provider.getTransactionCount(wallet.address);
 
     const gasLimit = await wallet.estimateGas({
@@ -93,10 +97,12 @@ export interface PendingTransactionGroup {
 async function sendTransactions(groups: TransactionRequestGroup[], node:INodeRecord) : Promise<PendingTransactionGroup[]> {
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
   const result = new Array<PendingTransactionGroup>();
+  const sig = window.sessionStorage.getItem(ROGUE_SESSION_SIGNATURE);
+  const simpleCrypto = new SimpleCrypto(sig);
 
   for(let g=0; g<groups.length; g++) {
     const responses = new Array<Promise<TransactionResponse>>();
-    const signer = new ethers.Wallet(groups[g].wallet.privateKey);
+    const signer = new ethers.Wallet(simpleCrypto.decrypt(groups[g].wallet.privateKey).toString());
 
     for(let i=0; i<groups[g].transactions.length; i++) {
       responses.push(provider.sendTransaction(await signer.signTransaction(groups[g].transactions[i])));

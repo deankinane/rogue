@@ -1,19 +1,41 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Row, Col, Card, Button } from 'react-bootstrap'
 import { PlusCircleFill, Wallet } from 'react-bootstrap-icons';
+import { useNavigate } from 'react-router-dom';
 import AddWalletModal from '../../components/addWalletModal/AddWalletModal';
 import WalletRecord from '../../components/walletRecord/WalletRecord'
 import IWalletRecord from '../../entities/IWalletRecord';
+import { getWalletBalance } from '../../entities/ProviderFunctions';
+import useIsLicensed from '../../hooks/useIsLicensed';
+import useNodeStorage from '../../hooks/useNodeStorage';
 import useOnMount from '../../hooks/useOnMount';
+import useSignedIn from '../../hooks/useSignedIn';
 import useWalletStorage from '../../hooks/useWalletStorage';
 import './WalletPage.css';
 
 function WalletPage() {
   const [addWalletModalVisible, setAddWalletModalVisible] = useState(false);
   const [wallets, setWallets] = useWalletStorage();
-
-  useOnMount(() => {
-    document.title = 'ROGUE - Mint NFTs FAST'
+  const [node] =  useNodeStorage();
+  const licensed = useIsLicensed();
+  const navigate = useNavigate();
+  const [render, setRender] = useState(false);
+  const [signedIn] = useSignedIn();
+  
+  useEffect(() => {
+    if (!licensed.checked) return;
+    if (!licensed.licensed || !signedIn) navigate('/');
+    setRender(true);
+  },[licensed, signedIn])
+  
+  useOnMount(async () => {
+    document.title = 'ROGUE - Mint NFTs Fast'
+    if(node) {
+      for(let i=0; i<wallets.length; i++) {
+        wallets[i].balance = await getWalletBalance(wallets[i].publicKey, node)
+      }
+      setWallets(wallets);
+    }
   })
   
   function onAddWalletClick() {
@@ -29,6 +51,7 @@ function WalletPage() {
   }
 
   return (
+    !render ? <></> : 
     <>
       <Row className='mb-3'>
         <Col className='d-flex align-items-center'>
@@ -52,8 +75,11 @@ function WalletPage() {
                   <Col xs={3}>
                     <p className='table-header__p'>Wallet Name</p>
                   </Col>
-                  <Col xs={9}>
+                  <Col xs={7} lg={5}>
                     <p className='table-header__p'>Public Address</p>
+                  </Col>
+                  <Col>
+                    <p className='table-header__p'>Balance</p>
                   </Col>
                 </Row>
               </div>

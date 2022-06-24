@@ -8,12 +8,10 @@
 }
 
 .mint-status-modal__wallet-container__title {
-  padding: 1em;
-  border-bottom:  1px solid #ffffff17;
   font-size: 0.8rem;
 }
 .mint-status-modal__wallet-container__title p {
-  font-weight: normal;
+  font-weight: bold;
 }
 
 .mint-status-modal__icon {

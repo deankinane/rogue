@@ -30,11 +30,10 @@ export default function ContractSearchBar({onSearch, loading}: ContractSearchBar
   return (
     <>
     
-    <InputGroup className="card-style flex-grow-1">
+    <InputGroup className="flex-grow-1">
       <InputGroup.Text>Address</InputGroup.Text>
       <Form.Control 
         type="text" 
-        placeholder="0x0000" 
         onChange={e => setValidAddress(e.currentTarget.value)}
       />
     </InputGroup>
@@ -47,7 +46,7 @@ export default function ContractSearchBar({onSearch, loading}: ContractSearchBar
     ): <></>}
     <Button 
       style={{'width':'114px'}}
-      className="float-end mt-3 clearfix" 
+      className="float-end mt-2 clearfix" 
       variant="info" 
       size="sm" 
       disabled={loading || address === ''}

@@ -14,14 +14,10 @@ export default function useNodeStorage(): [INodeRecord | undefined, (Node: INode
   }
   
   return [node, setNode];
-  
-  // return [[{
-  //   url: 'wss://api.zmok.io/mainnet/fxikwb62uoromzop',
-  //   chainId: 1
-  // }], setNodes];
 
-  //  return [[{
-  //   url: 'wss://api.zmok.io/testnet/3ki5uxoqm3thlxyl',
+
+  //  return [{
+  //   rpcUrl: 'https://api.zmok.io/testnet/3ki5uxoqm3thlxyl',
   //   chainId: 4
-  // }], setNodes]
+  // }, setNode]
 }

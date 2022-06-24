@@ -1,0 +1,27 @@
+.task-trigger-type-button {
+  background: #ffffff1c;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  border: 1px solid #ffffff00;
+  transition: all ease-in-out 0.2s;
+  user-select: none;
+}
+
+.task-trigger-type-button p {
+  font-size: 0.8rem;
+  margin:0;
+}
+
+.task-trigger-type-button_title {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.task-trigger-type-button:hover {
+  border: 1px solid rgb(71 231 17)
+}
+
+.task-trigger-type-button.active {
+  background-color: #5f2f99a6;
+}

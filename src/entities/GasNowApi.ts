@@ -1,9 +1,9 @@
-import { BigNumber, ethers } from "ethers";
+import { BLOCKNATIVE_APPID } from "./constants";
 
-const URL: string = 'https://etherchain.org/api/gasnow';
+const URL: string = 'https://api.blocknative.com/gasprices/blockprices';
 export interface EthGasPrice {
-  gas:number
-  price:number
+  base:number
+  max:number
 }
 
 interface GasCache {
@@ -13,21 +13,24 @@ interface GasCache {
 
 const gasCache: GasCache = {
   updated: 0,
-  value: {gas:0, price:0}
+  value: {base:0, max:0}
 }
 
 async function getCurrentGas(): Promise<EthGasPrice> {
-  if (+ new Date() - gasCache.updated < 2000) {
+  if (+ new Date() - gasCache.updated < 3001) {
     return gasCache.value;
   }
 
-  const resp = await fetch(URL);
-  const data = (await resp.json()).data;
-
-  const gas = ethers.utils.formatUnits(BigNumber.from(data.fast), 'gwei')
+  const resp = await fetch(URL, {
+    headers: {
+      Authorization: BLOCKNATIVE_APPID
+    }
+  });
+  const data = (await resp.json());
 
   gasCache.updated = + new Date();
-  gasCache.value = {gas: parseInt(gas), price: data.priceUSD};
+  gasCache.value.max = parseInt(data.blockPrices[0].estimatedPrices[0].maxFeePerGas);
+  gasCache.value.base = parseInt(data.blockPrices[0].baseFeePerGas);
 
   return gasCache.value;
 }

@@ -14,13 +14,16 @@ function WalletRecord({wallet}:WalletRecordProps) {
       <Col xs={3} className='d-flex align-items-center'>
         <p className='mb-0'>{wallet.name}</p>
       </Col>
-      <Col xs={9} lg={6} className='d-flex align-items-center'>
-      <Button variant='dark me-2'>
+      <Col xs={7} lg={5} className='d-flex align-items-center'>
+        <Button variant='dark me-2'>
           <Clipboard/>
         </Button>
         <p className='mb-0'>{wallet.publicKey}</p>
       </Col>
-      <Col xs={12} lg={3} className='mt-3 mt-lg-0'>
+      <Col xs={2}>
+      <p className='mb-0'>{parseFloat(wallet.balance.toString()).toFixed(3)} ETH</p>
+      </Col>
+      <Col xs={12} lg={2} className='mt-3 mt-lg-0'>
         <ButtonGroup className='float-end'>
           <Button variant="dark"><XSquare /></Button>
           <a 

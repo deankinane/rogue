@@ -1,8 +1,6 @@
-import { ethers } from 'ethers';
 import React, { ChangeEvent, useEffect, useRef } from 'react'
 import { Col, Form, Row } from 'react-bootstrap';
 import IWalletRecord from '../../entities/IWalletRecord'
-import useOnMount from '../../hooks/useOnMount';
 import './WalletSelector.css'
 
 export interface WalletSelectorProps {
@@ -12,11 +10,15 @@ export interface WalletSelectorProps {
 
 function WalletSelector({wallets, onWalletSelectionChanged}:WalletSelectorProps) {
   const selectedWallets = useRef(new Array<IWalletRecord>());
+  const loaded = useRef(false);
 
   useEffect(() => {
+    if(loaded.current) return;
+
     if(wallets.length > 0 && selectedWallets.current.length === 0) {
       selectedWallets.current.push(wallets[0]);
       onWalletSelectionChanged(selectedWallets.current)
+      loaded.current = true;
     }
   }, [wallets])
 
@@ -35,7 +37,7 @@ function WalletSelector({wallets, onWalletSelectionChanged}:WalletSelectorProps)
     <div>      
       <Row className='g-2'>
         {wallets.map((w, i) => (
-          <Col key={i} xs={6} >
+          <Col key={i} xs={12} xl={6} >
             <div className='wallet-selector d-flex'>
               <Form.Check className='wallet-selector__checkbox'
                 type='switch'
