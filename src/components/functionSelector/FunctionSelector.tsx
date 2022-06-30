@@ -16,7 +16,6 @@ export default function FunctionSelector({label, functions, onFunctionSelected, 
 
   useEffect(() => {
     if (functions && functions.length >= 1) {
-      //setSelectedFunction(functions[0]);
       onFunctionSelected(functions[0]);
     }
   }, [functions])

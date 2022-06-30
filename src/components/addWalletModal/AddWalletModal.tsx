@@ -7,6 +7,7 @@ import useNodeStorage from '../../hooks/useNodeStorage';
 import useWalletStorage from '../../hooks/useWalletStorage';
 import useSignedIn from '../../hooks/useSignedIn';
 import SimpleCrypto from 'simple-crypto-js';
+import useWalletConnected from '../../hooks/useWalletConnected';
 
 interface AddWalletModalProps extends ModalProps {
   callback: (wallet?: IWalletRecord ) => void
@@ -18,7 +19,7 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
   const [privateKey, setPrivateKey] = useState("");
   const [working, setWorking] = useState(false);
   const [node] = useNodeStorage();
-  const [, signature] = useSignedIn();
+  const [walletInfo] = useWalletConnected();
 
   async function onAddButtonClicked(e: FormEvent) {
     e.preventDefault();
@@ -34,7 +35,7 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
     setWorking(true);
     const etherWallet = new ethers.Wallet(privateKey);
 
-    const simpleCrypto = new SimpleCrypto(signature); 
+    const simpleCrypto = new SimpleCrypto(walletInfo.address); 
     const encrypted = simpleCrypto.encrypt(privateKey);
 
     const newWallet: IWalletRecord = {

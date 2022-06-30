@@ -39,6 +39,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/wallets" element={<WalletPage />} />
           <Route path="/mint" element={<MintForm />} />
+          <Route path="/mint/:contract" element={<MintForm />} />
           <Route path="/tasks"element={<div/>} />
           <Route path="/settings"element={<SettingsPage />} />
           

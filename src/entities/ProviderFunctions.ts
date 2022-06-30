@@ -1,7 +1,7 @@
 import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
 import { Contract, ethers } from "ethers";
 import SimpleCrypto from "simple-crypto-js";
-import { ROGUE_SESSION_SIGNATURE } from "../hooks/useSignedIn";
+import { ROGUE_SESSION_ADDRESS } from "../hooks/useWalletConnected";
 import { TransactionState } from "./GlobalState";
 import INodeRecord from "./INodeRecord";
 import IWalletRecord from "./IWalletRecord";
@@ -35,23 +35,24 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
       throw new Error("Invalid Transactions Configuration");
   }
   
-  if(settings.maxGasFee < 0) settings.maxGasFee = 1;
-  
   const result = new Array<TransactionRequestGroup>();
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
 
-  const totalMintCost = ethers.utils.parseEther(`${settings.pricePerUnit || 0}`).mul(settings.unitsPerTxn);
+  const totalMintCost = ethers.utils.parseEther(`${settings.totalCost || 0}`);
   
   const params = new Array<any>();
-  params.push(settings.unitsPerTxn);
+  
+  if(settings.mintFunction.inputs.length > 0) {
+    params.push(settings.unitsPerTxn);
 
-  settings.mintFunction.inputs.forEach((x,i) => {
-    if(i>0) params.push(settings.functionParams?.get(x.name));
-  })
+    settings.mintFunction.inputs.forEach((x,i) => {
+      if(i>0) params.push(settings.functionParams?.get(x.name));
+    })
+  }
   
   const data = mintContract.abi.encodeFunctionData(settings.mintFunction, params);
   const txnsPerWallet = settings.transactionsPerWallet || 1;
-  const sig = window.sessionStorage.getItem(ROGUE_SESSION_SIGNATURE);
+  const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
   const simpleCrypto = new SimpleCrypto(sig);
 
   for(let w=0; w<settings.selectedWallets.length; w++) {
@@ -92,12 +93,13 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
 export interface PendingTransactionGroup {
   wallet: IWalletRecord,
   transactions: Promise<TransactionResponse>[]
+  resolved: number[]
 }
 
 async function sendTransactions(groups: TransactionRequestGroup[], node:INodeRecord) : Promise<PendingTransactionGroup[]> {
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
   const result = new Array<PendingTransactionGroup>();
-  const sig = window.sessionStorage.getItem(ROGUE_SESSION_SIGNATURE);
+  const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
   const simpleCrypto = new SimpleCrypto(sig);
 
   for(let g=0; g<groups.length; g++) {
@@ -110,12 +112,21 @@ async function sendTransactions(groups: TransactionRequestGroup[], node:INodeRec
 
     result.push({
       wallet: groups[g].wallet,
-      transactions: responses
+      transactions: responses,
+      resolved: new Array<number>()
     })
   }
 
   return result;
 }
 
+async function sendTransaction(txn: TransactionRequest, wallet:IWalletRecord, node:INodeRecord) : Promise<TransactionResponse> {
+  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
+  const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
+  const simpleCrypto = new SimpleCrypto(sig);
+  const signer = new ethers.Wallet(simpleCrypto.decrypt(wallet.privateKey).toString());
+  return provider.sendTransaction(await signer.signTransaction(txn));
+}
 
-export {getReadValue, prepareTransactions, sendTransactions, getWalletBalance};
+
+export {getReadValue, prepareTransactions, sendTransactions, sendTransaction, getWalletBalance};

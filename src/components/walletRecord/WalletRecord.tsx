@@ -5,10 +5,12 @@ import IWalletRecord from '../../entities/IWalletRecord'
 import './WalletRecord.css'
 
 export interface WalletRecordProps {
-  wallet: IWalletRecord
+  wallet: IWalletRecord,
+  onDeleteWallet: (wallet: IWalletRecord) => void
 }
 
-function WalletRecord({wallet}:WalletRecordProps) {
+function WalletRecord({wallet, onDeleteWallet}:WalletRecordProps) {
+
   return (
     <Row className='wallet-record mt-1'>
       <Col xs={3} className='d-flex align-items-center'>
@@ -25,7 +27,7 @@ function WalletRecord({wallet}:WalletRecordProps) {
       </Col>
       <Col xs={12} lg={2} className='mt-3 mt-lg-0'>
         <ButtonGroup className='float-end'>
-          <Button variant="dark"><XSquare /></Button>
+          <Button variant="dark" onClick={() => onDeleteWallet(wallet)}><XSquare /></Button>
           <a 
             href={`https://etherscan.io/address/${wallet.publicKey}`}
             target='_blank'

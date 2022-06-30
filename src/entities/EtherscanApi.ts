@@ -14,19 +14,19 @@ async function getContractSource(address: string) : Promise<any> {
   return result.result[0];
 }
 
-export interface ContractDetails {
-  tokenName: string
-  symbol: string
-  description: string
-  wesbite: string
-  twitter: string
-  discord: string
-  telegram: string
-}
-async function getContractDetails(address: string) : Promise<ContractDetails> {
-  const request = await fetch(`${BaseUrl}module=token&action=tokeninfo&contractaddress=${address}&apiKey=${ApiKey}`);
-  const result = await request.json();
-  return result.result[0];
-}
+// export interface ContractDetails {
+//   tokenName: string
+//   symbol: string
+//   description: string
+//   wesbite: string
+//   twitter: string
+//   discord: string
+//   telegram: string
+// }
+// async function getContractDetails(address: string) : Promise<ContractDetails> {
+//   const request = await fetch(`${BaseUrl}module=token&action=tokeninfo&contractaddress=${address}&apiKey=${ApiKey}`);
+//   const result = await request.json();
+//   return result.result[0];
+// }
 
-export {getCurrentGas, getContractSource, getContractDetails};
+export {getCurrentGas, getContractSource};

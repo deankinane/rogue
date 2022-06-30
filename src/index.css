@@ -355,3 +355,11 @@ body::-webkit-scrollbar {
 input {
   color-scheme: dark;
 }
+
+.contract-logo {
+  height: 2rem;
+  float: right;
+  margin-top: -0.25rem;
+  margin-left: 1rem;
+  border-radius: 0.25rem;
+}

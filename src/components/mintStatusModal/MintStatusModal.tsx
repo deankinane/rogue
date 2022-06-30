@@ -1,11 +1,11 @@
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
-import { Button, Card, Col, FormControl, InputGroup, Modal, Row, Spinner } from 'react-bootstrap'
-import { PendingTransactionGroup, sendTransactions, TransactionRequestGroup } from '../../entities/ProviderFunctions'
+import { Button, Col, FormControl, InputGroup, Modal, Row, Spinner } from 'react-bootstrap'
+import { PendingTransactionGroup, sendTransaction, TransactionRequestGroup } from '../../entities/ProviderFunctions'
 import TransactionStatusWidget from './transactionStatusWidget/TransactionStatusWidget'
 import './MintStatusModal.css';
 import getCurrentGas, { EthGasPrice } from '../../entities/GasNowApi';
 import useRecursiveTimeout from '../../hooks/useRecursiveTimeout';
-import {  ExclamationCircleFill, FlagFill, LightningChargeFill } from 'react-bootstrap-icons';
+import { LightningChargeFill } from 'react-bootstrap-icons';
 import { TransactionState } from '../../entities/GlobalState';
 import { ethers } from 'ethers';
 import useNodeStorage from '../../hooks/useNodeStorage';
@@ -56,12 +56,15 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   const txnEmitter = useRef<Emitter>();
   const [effPrioFee, setEffPrioFee] = useState(0);
   const [currentlyBeating, setCurrentlyBeating] = useState(0);
+  const importantTxnCount = useRef(0);
 
   useEffect(() => {
     if(settings.maxGasFee) {
       setNewGas(settings.maxGasFee)
     }
     setTransactionCount((settings.selectedWallets?.length || 0) * (settings.transactionsPerWallet || 0));
+    const maxSupply = settings.maxSupply > 0 ? settings.maxSupply : 6000;
+    importantTxnCount.current = Math.round(maxSupply / settings.unitsPerTxn);
   },[settings])
 
   useEffect(() => {
@@ -91,8 +94,12 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   function updateGasProbabilityEstimates() {
     if(gasDistribution.current.length === 0) return;
 
-    const sorted = gasDistribution.current.map(x => getEPF(x.max, x.priority))
+    let sorted = gasDistribution.current.map(x => getEPF(x.max, x.priority))
     sorted.sort((x, y) => x - y);
+
+    if (importantTxnCount.current > 0 && sorted.length > importantTxnCount.current) {
+      sorted = sorted.slice(sorted.length - importantTxnCount.current);
+    }
 
     const _100 = sorted.length-1;
     const _90 = Math.min(Math.ceil(sorted.length * 0.90), sorted.length - 1);
@@ -131,20 +138,6 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
       });
     }
   }
-  // function analyseTransaction(txn: TransactionResponse) {
-  
-  //   if(txn && txn.to === settings.contractAddress) {
-  //     setTxnCounts(c => { c.total++; return c; });
-  //     if(txn.maxPriorityFeePerGas) {
-  //       gasDistribution.current.push(parseInt(ethers.utils.formatUnits(txn.maxPriorityFeePerGas, 'gwei')));
-
-  //       if( txn.maxPriorityFeePerGas > gasThreshold.current) {
-  //         setTxnCounts(c => { c.higherGas++; return c; });
-  //       }
-  //     }
-  //   }
-    
-  // }
 
   useRecursiveTimeout(async() => {
     const gasprice = await getCurrentGas();
@@ -153,20 +146,22 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   }, 2000);
 
   async function speedUpTransactions() {
-    if(!node) return //TODO something beter
-    setResubmitting(true);
-    transactionRequestGroups.forEach(g => {
-      g.transactions.forEach(t => {
-        t.maxFeePerGas = ethers.utils.parseUnits(`${newGas}`, 'gwei')
-        t.maxPriorityFeePerGas = ethers.utils.parseUnits(`${newGas}`, 'gwei')
-      })
-    });
+    if(!node) return //TODO something better
 
-    try {
-      const resent = await sendTransactions(transactionRequestGroups, node);
-      setPendingTransactions(resent);
-    } catch (error) {
-      // TODO display message that they couldn't be resent as already being processed
+    setResubmitting(true);
+
+    for(let i=0; i<transactionRequestGroups.length; i++) {
+      for(let j=0; j<transactionRequestGroups[i].transactions.length; j++) {
+        if (pendingTransactions[i].resolved.indexOf(j) === -1) {
+          transactionRequestGroups[i].transactions[j].maxFeePerGas = ethers.utils.parseUnits(`${newGas}`, 'gwei')
+          transactionRequestGroups[i].transactions[j].maxPriorityFeePerGas = ethers.utils.parseUnits(`${newGas}`, 'gwei')
+          try {
+            pendingTransactions[i].transactions[j] = sendTransaction(transactionRequestGroups[i].transactions[j], transactionRequestGroups[i].wallet, node)
+          } catch (error) {
+            // TODO display message that they couldn't be resent as already being processed
+          }
+        }
+      }
     }
     
     setResubmitting(false);
@@ -184,13 +179,15 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
     gasDistribution.current = new Array<TxnGasSettings>();
   }
   
-  function onTxnComplete(rec?: TransactionReceipt) {
+  function onTxnComplete(group:number, index: number, rec?: TransactionReceipt) {
     if(rec) {
       completeCount.current++;
     }
     else{
       failedCount.current++;
     }
+
+    pendingTransactions[group].resolved.push(index);
 
     if (completeCount.current+failedCount.current === transactionCount) {
       setComplete(true);
@@ -221,7 +218,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
               <div className="d-flex">
                 <div className='flex-grow-1'>
                   <p className='modal-section__title mb-1'>Gas Optimizer</p>
-                  <p className='modal-info-text'>Currently beating {currentlyBeating}% of transactions</p>
+                  <p className='modal-info-text'>Chance of success: {currentlyBeating}%</p>
                 </div>
                 <div>
                   <InputGroup className='mb-3' size='lg'>
@@ -275,7 +272,9 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
               </div>
               <Row className='g-2'>
                 {g.transactions.map((t,j) => (
-                  <Col xs={12} md={6} lg={4} key={j}><TransactionStatusWidget transaction={t} callback={onTxnComplete} /></Col>
+                  <Col xs={12} md={6} lg={4} key={j}>
+                    <TransactionStatusWidget transaction={t} group={i} index={j} callback={onTxnComplete} />
+                  </Col>
                 ))}
               </Row>
             </div>

@@ -17,11 +17,12 @@ import useNodeStorage from "../../hooks/useNodeStorage";
 import { BigNumber, ethers } from "ethers";
 import useWalletStorage from "../../hooks/useWalletStorage";
 import useOnMount from "../../hooks/useOnMount";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import useIsLicensed from "../../hooks/useIsLicensed";
 import useSignedIn from "../../hooks/useSignedIn";
 import useToast from "../../hooks/useToast";
 import ScheduleTaskModal from "../../components/scheduleTaskModal/ScheduleTaskModal";
+import { isBrowser } from 'react-device-detect';
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
@@ -38,14 +39,14 @@ export default function MintPage() {
   });
   const [sentTransactionSettings, setSentTransactionSettings] = useState<TransactionState>(defaultTransactionState);
   const [sentTransactionRequests, setSentTransactionRequests] = useState<TransactionRequestGroup[]>(new Array<TransactionRequestGroup>());
-  const [loading, setLoading] = useState(false);  
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>())
   const [showMintStatusModal, setShowMintStatusModal] = useState(false);
   const [node] =  useNodeStorage();
-  const [mintCost, setMintCost] = useState('');
+  const [totalPerWallet, setTotalPerWallet] = useState('');
   const [totalCost, setTotalCost] = useState('');
   const [minting, setMinting] = useState(false);
   const [showScheduleTaskModal, setScheduleTaskModal] = useState(false);
+  const [findFunction, setFindFunction] = useState('')
 
   useOnMount(async () => {
     document.title = 'ROGUE - Mint NFTs Fast'
@@ -71,39 +72,29 @@ export default function MintPage() {
   }
 
   useEffect(() => {
-    if(isNaN(transactionState.pricePerUnit) || isNaN(transactionState.transactionsPerWallet) || isNaN(transactionState.unitsPerTxn))
+    if(isNaN(transactionState.pricePerUnit) || isNaN(transactionState.totalCost) || isNaN(transactionState.transactionsPerWallet) || isNaN(transactionState.unitsPerTxn))
       return;
-    const totalRounded = (transactionState.pricePerUnit * transactionState.unitsPerTxn  * transactionState.transactionsPerWallet * transactionState.selectedWallets.length).toFixed(4);
-    const total = ethers.utils.parseEther(totalRounded);
-    const gas = ethers.utils.parseUnits(`${transactionState.maxGasFee * transactionState.transactionsPerWallet * transactionState.selectedWallets.length * 100000}`, 'gwei');
-    const mintCost = ethers.utils.formatEther(total); 
-    setMintCost(parseFloat(mintCost).toFixed(4));
-    const result = ethers.utils.formatEther(total.add(gas));
-    setTotalCost(parseFloat(result).toFixed(4))
+
+    const costPerTxn = ethers.utils.parseEther(`${transactionState.totalCost}`)
+    const gasPerTxn = ethers.utils.parseUnits(`${transactionState.maxGasFee * 100000}`, 'gwei')
+    const totalPerTxn = costPerTxn.add(gasPerTxn);
+    const totalPerWallet = totalPerTxn.mul(transactionState.transactionsPerWallet)
+    const total = totalPerWallet.mul(transactionState.selectedWallets.length)
+
+    setTotalPerWallet(parseFloat(ethers.utils.formatEther(totalPerWallet)).toFixed(4))
+    setTotalCost(parseFloat(ethers.utils.formatEther(total)).toFixed(4))
   },[transactionState])
 
-  function onSearchContract(address: string) {
-    setLoading(true);
-    setContract(undefined);
-    const newContract = new MintContract(address);
-    newContract.init().then(() => {
-      setContract(newContract);
-      updateTransactionState({
-        contractAddress: newContract.address
-      });
-      document.title = `${newContract.contractName} - ROGUE - Mint NFTs FAST`
-      setLoading(false);
-    })
-    .catch((e:Error) => {
-      sendToast('Load Contract Failed', e.message, 'error');
-      setLoading(false);
-    });
+  function onSearchContract(newContract: MintContract) {
+    setContract(newContract);
   }
   
   function onMintFunctionSelected(f: FunctionFragment) {
     updateTransactionState({
       mintFunction: f
     });
+
+    setFindFunction(f.name)
   }
 
   function onMintFunctionParamChanged(param: string, value: string){
@@ -115,7 +106,6 @@ export default function MintPage() {
   }
 
   function onWalletSelectionChanged(selectedWallets: IWalletRecord[]) {
-  
     updateTransactionState({
       selectedWallets: selectedWallets
     });
@@ -123,19 +113,27 @@ export default function MintPage() {
 
   function onUnitsPerTxnChanged(e: ChangeEvent<HTMLInputElement>) {
     updateTransactionState({
-      unitsPerTxn: parseInt(e.currentTarget.value)
+      unitsPerTxn: parseInt(e.currentTarget.value),
+      totalCost: transactionState.pricePerUnit * parseInt(e.currentTarget.value)
     });
   } 
 
   function onPricePerUnitChanged(e: ChangeEvent<HTMLInputElement>) {
     updateTransactionState({
-      pricePerUnit: parseFloat(e.currentTarget.value)
+      pricePerUnit: parseFloat(e.currentTarget.value),
+      totalCost: parseFloat(e.currentTarget.value) * transactionState.unitsPerTxn
     });
   } 
 
   function onTxnsPerWalletChanged(e: ChangeEvent<HTMLInputElement>) {
     updateTransactionState({
       transactionsPerWallet: parseFloat(e.currentTarget.value)
+    });
+  } 
+
+  function onTotalCostChanged(e: ChangeEvent<HTMLInputElement>) {
+    updateTransactionState({
+      totalCost: parseFloat(e.currentTarget.value)
     });
   } 
 
@@ -147,13 +145,21 @@ export default function MintPage() {
 
   function onSetUnitPriceClicked(value: string) {
     updateTransactionState({
-      pricePerUnit: parseFloat(ethers.utils.formatEther(BigNumber.from(value)))
+      pricePerUnit: parseFloat(ethers.utils.formatEther(BigNumber.from(value))),
+      totalCost: parseFloat(ethers.utils.formatEther(BigNumber.from(value))) * transactionState.unitsPerTxn
     });
   }
 
   function onSetUnitsPerTxnClicked(value: string) {
     updateTransactionState({
-      unitsPerTxn: parseInt(value)
+      unitsPerTxn: parseInt(value),
+      totalCost: transactionState.pricePerUnit * parseInt(value)
+    });
+  }
+
+  function onMaxSupplyLoaded(value: number) {
+    updateTransactionState({
+      maxSupply: value
     });
   }
 
@@ -168,7 +174,6 @@ export default function MintPage() {
       || isNaN(transactionState.pricePerUnit)
       || isNaN(transactionState.transactionsPerWallet)
       || isNaN(transactionState.unitsPerTxn)
-      || transactionState.mintFunction === undefined
   }
 
   async function mint() {
@@ -207,7 +212,7 @@ export default function MintPage() {
     />
     <ScheduleTaskModal 
       show={showScheduleTaskModal}
-      settings={sentTransactionSettings}
+      transactionState={sentTransactionSettings}
       onHide={() => {setScheduleTaskModal(false)}}
       contract={contract}
     />
@@ -216,19 +221,20 @@ export default function MintPage() {
           <h5 className='fw-bold mb-0'><Triangle className='me-3' />Mint</h5>
         </Col>
         <Col>
+        {contract && contract.contractLogo !== '' ? <img className='contract-logo' src={contract.contractLogo} alt={`${contract.contractName} Logo`}/> : <></>}
           <h5 className='fw-bold float-end'>{contract ? contract.contractName : 'No Contract Loaded'}</h5>
         </Col>
       </Row>
     <Row className="d-flex align-items-stretch mb-3 g-3">
-    <Col>
+    <Col xs={12} lg={4}>
       <Card  className="h-100">
         <Card.Body>
           <div>
-            <p>Load Contract</p>
+            <p className="mb-0">Load Contract</p>
           </div>
           
         
-          <ContractSearchBar onSearch={onSearchContract} loading={loading}  />
+          <ContractSearchBar onContractLoaded={onSearchContract} />
           <div className="clearfix"></div>
           <p className="mt-3">Select Mint Function</p>
             <FunctionSelector 
@@ -241,7 +247,7 @@ export default function MintPage() {
       </Card>
       
       </Col>
-      <Col>
+      <Col xs={12} lg={4}>
         <Card className="h-100">
           <Card.Body>
             <p className="mb-0">Set Transaction Parameters</p>
@@ -259,7 +265,7 @@ export default function MintPage() {
                 </InputGroup>
               </Col>
             </Row>
-            <Row className="g-2 mt-2">
+            <Row className="g-2 mt-0">
               <Col xs={12} xl={6}>
                 <InputGroup>
                   <InputGroup.Text>Cost per Mint</InputGroup.Text>
@@ -268,8 +274,8 @@ export default function MintPage() {
               </Col>
               <Col xs={12} xl={6}>
                 <InputGroup>
-                  <InputGroup.Text>Total</InputGroup.Text>
-                  <InputGroup.Text className="flex-grow-1 d-flex justify-content-end">{mintCost} ETH</InputGroup.Text>
+                  <InputGroup.Text>Total per Wallet</InputGroup.Text>
+                  <Form.Control type="number" min={0} step={0.005} placeholder="ether" value={transactionState.totalCost} onChange={onTotalCostChanged} />
                 </InputGroup>
               </Col>
             </Row>
@@ -277,7 +283,7 @@ export default function MintPage() {
             {
               transactionState.mintFunction?.inputs && transactionState.mintFunction?.inputs.length>1 ? (
                 <>
-                  <p>Additional Function Parameters</p>
+                  <p className="mt-3">Additional Function Parameters</p>
                   {transactionState.mintFunction?.inputs.map((x,i) => 
                     (i>0 ? (
                       <InputGroup key={i} className="mt-3">
@@ -296,7 +302,7 @@ export default function MintPage() {
           </Card.Body>
         </Card>
       </Col>
-      <Col>
+      <Col xs={12} lg={4}>
         <Card className="h-100">
           <Card.Body className="d-flex flex-column">
             <div>              
@@ -306,7 +312,7 @@ export default function MintPage() {
             <p className="mt-3">Mint Summary</p>
             <InputGroup className="justify-content-end">
               <InputGroup.Text className="flex-grow-1">Total Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
-              <InputGroup.Text>Cost: {mintCost} ETH</InputGroup.Text>
+              <InputGroup.Text>Per Wallet: {totalPerWallet} ETH</InputGroup.Text>
               <InputGroup.Text>Total: <span className="fw-bold ms-1">{totalCost} ETH</span></InputGroup.Text>
             </InputGroup>
             <div className="flex-grow-1 d-flex justify-content-end">
@@ -334,13 +340,26 @@ export default function MintPage() {
         <div className="d-flex flex-row overflow-auto">
         {
           contract
-            ? contract.viewables.map((x,i) => <ViewableFunctionDetail key={i} functionFragment={x} contract={contract} onSetUnitPriceClicked={onSetUnitPriceClicked} onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked} />)
+            ? contract.viewables.map((x,i) => (
+              <ViewableFunctionDetail 
+                key={i} 
+                functionFragment={x} 
+                contract={contract} 
+                onSetUnitPriceClicked={onSetUnitPriceClicked} 
+                onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked}
+                onMaxSupplyLoaded={onMaxSupplyLoaded} />)
+            )
+              
             : <Card className="w-100 p-3">Read only values will display here</Card>
         }
         </div>        
       </Col>
     </Row>
-    <CodeBlock code={contract ? contract?.contractSource : "// Contract source will display here"} />
+    {
+      isBrowser 
+      ? <CodeBlock findFunction={findFunction} code={contract ? contract?.contractSource : "// Contract source will display here"} />
+      : <></>
+    }
     </>
   )
 }

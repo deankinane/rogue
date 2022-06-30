@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import useLocalStorage from "./useLocalStorage";
 
 export interface ConnectedWalletInfo {
   connected: boolean
@@ -8,8 +7,10 @@ export interface ConnectedWalletInfo {
   address?: string
 }
 
-export default function useWalletConnected(): [ConnectedWalletInfo, () => void] {
+export const ROGUE_SESSION_ADDRESS = 'ROGUE_SESSION_ADDRESS';
 
+export default function useWalletConnected(): [ConnectedWalletInfo, () => void] {
+  
   const [walletInfo, setWalletInfo] = useState<ConnectedWalletInfo>({
     connected: false,
     chainId: undefined,
@@ -30,6 +31,7 @@ export default function useWalletConnected(): [ConnectedWalletInfo, () => void] 
           if (accounts && accounts.length >= 1) {
             info.address = accounts[0];
             info.connected = true;
+            window.sessionStorage.setItem(ROGUE_SESSION_ADDRESS, info.address || '');
             setWalletInfo(info);
           }
         });
@@ -46,7 +48,7 @@ export default function useWalletConnected(): [ConnectedWalletInfo, () => void] 
           chainId: 1,
           address: accounts[0]
         };
-
+        window.sessionStorage.setItem(ROGUE_SESSION_ADDRESS, info.address || '');
         setWalletInfo(info);
       }
       else {

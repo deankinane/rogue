@@ -21,6 +21,8 @@ function WalletPage() {
   const navigate = useNavigate();
   const [render, setRender] = useState(false);
   const [signedIn] = useSignedIn();
+
+  const [walletList, setWalletList] = useState(new Array<IWalletRecord>());
   
   useEffect(() => {
     if (!licensed.checked) return;
@@ -35,6 +37,7 @@ function WalletPage() {
         wallets[i].balance = await getWalletBalance(wallets[i].publicKey, node)
       }
       setWallets(wallets);
+      setWalletList(wallets);
     }
   })
   
@@ -45,9 +48,14 @@ function WalletPage() {
   function onAddWalletCallback(wallet?: IWalletRecord) {
     setAddWalletModalVisible(false);
     if(wallet){
-      wallets.push(wallet);
-      setWallets(wallets);
+      walletList.push(wallet);
+      setWallets(walletList);
     }
+  }
+  function onDeleteWallet(wallet: IWalletRecord) {
+
+    setWalletList(walletList.filter(x => x.name !== wallet.name))
+    setWallets(walletList.filter(x => x.name !== wallet.name));
   }
 
   return (
@@ -83,7 +91,7 @@ function WalletPage() {
                   </Col>
                 </Row>
               </div>
-              {wallets.map((x,i) => <WalletRecord key={i} wallet={x} />)}
+              {walletList.map((x,i) => <WalletRecord key={i} wallet={x} onDeleteWallet={onDeleteWallet} />)}
             </Card.Body>
             
           </Card>

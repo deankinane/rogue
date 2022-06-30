@@ -1,11 +1,14 @@
 import { FunctionFragment, Interface } from "ethers/lib/utils";
 import { FragmentTypes, FunctionTypes } from "./constants";
 import { getContractSource } from "./EtherscanApi";
+import { loadCollectionDetails } from "./NFTEyeApi";
 
 class MintContract {
   address: string;
   contractName: string = "";
   contractSource: string = "";
+  contractSlug: string = "";
+  contractLogo: string = "";
   abi: Interface | null = null;
   payables: FunctionFragment[];
   writables: FunctionFragment[];
@@ -56,6 +59,13 @@ class MintContract {
         }
       }
     });
+
+    const details = await loadCollectionDetails(this.address)
+    if (details !== null) {
+      this.contractName = details.name
+      this.contractLogo = details.logo
+      this.contractSlug = details.slug
+    }
   }
 }
 

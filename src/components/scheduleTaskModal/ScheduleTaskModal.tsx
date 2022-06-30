@@ -1,9 +1,10 @@
 import React, { PropsWithChildren, useState } from 'react'
-import { Modal, Row, Col, InputGroup, Button, FormControl, Spinner } from 'react-bootstrap'
-import { Bullseye, ClockFill, LightningChargeFill, Speedometer, Speedometer2 } from 'react-bootstrap-icons';
+import { Modal, Row, Col, Button } from 'react-bootstrap'
+import { Bullseye, ClockFill, Speedometer2 } from 'react-bootstrap-icons';
 import { TransactionState } from '../../entities/GlobalState'
 import MintContract from '../../entities/MintContract';
-import BackrunTriggerForm, { BackrunTriggerSettings } from './backrunTrigger/BackrunTriggerForm';
+import { BackrunTriggerSettings, TriggerType } from '../../entities/ScheduledTasks';
+import BackrunTriggerForm from './backrunTrigger/BackrunTriggerForm';
 import './ScheduleTaskModal.css';
 import TargetValueForm from './targetValue/TargetValueForm';
 import TimeTriggerForm from './timeTrigger/TimeTriggerForm';
@@ -11,17 +12,11 @@ import TimeTriggerForm from './timeTrigger/TimeTriggerForm';
 export interface ScheduleTaskModalProps extends PropsWithChildren<any> {
   show: boolean
   onHide: () => void
-  settings: TransactionState,
+  transactionState: TransactionState,
   contract?: MintContract
 }
 
-enum TriggerType {
-  backrun = 'backrun',
-  value = 'value',
-  time = 'time'
-}
-
-function ScheduleTaskModal({show, onHide, settings, contract}: ScheduleTaskModalProps) {
+function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleTaskModalProps) {
   const [triggerType, setTriggerType] = useState<TriggerType>()
 
   function closeModal() {
@@ -32,7 +27,9 @@ function ScheduleTaskModal({show, onHide, settings, contract}: ScheduleTaskModal
     return type === triggerType ? ' active' : '';
   }
 
-  function onSettingsUpdate(settings: BackrunTriggerSettings){}
+  function onSettingsUpdate(settings: BackrunTriggerSettings){
+    
+  }
   
   return (
     <Modal
@@ -84,7 +81,7 @@ function ScheduleTaskModal({show, onHide, settings, contract}: ScheduleTaskModal
             <TargetValueForm contract={contract} />
             : <></>
           }
-           {
+          {
             triggerType === TriggerType.time ?
             <TimeTriggerForm contract={contract} />
             : <></>

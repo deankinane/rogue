@@ -15,7 +15,6 @@ export default function useNodeStorage(): [INodeRecord | undefined, (Node: INode
   
   return [node, setNode];
 
-
   //  return [{
   //   rpcUrl: 'https://api.zmok.io/testnet/3ki5uxoqm3thlxyl',
   //   chainId: 4

@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
+import { ROGUE_SESSION_ADDRESS } from "./useWalletConnected";
 
 export const ROGUE_SESSION_SIGNATURE = 'ROGUE_SESSION_SIGNATURE';
 
@@ -22,8 +23,9 @@ export default function useSignedIn() : [boolean, string, () => void] {
     if(awaitingSignature) return;
 
     setAwaitingSignature(true);
+    const address = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
+    const signer = provider.getSigner(address || 'xxx');
     try {
       const sig = await signer.signMessage("Rogue - Sign In");
       setSignedIn(true);

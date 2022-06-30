@@ -7,7 +7,9 @@ import { ethers } from 'ethers';
 
 export interface TransactionStatusWidgetProps extends PropsWithChildren<any> {
   transaction: Promise<TransactionResponse>
-  callback: (rec?: TransactionReceipt) => void
+  group: number
+  index: number
+  callback: (group:number, index: number, rec?: TransactionReceipt) => void
 }
 
 enum TransactionState {
@@ -17,11 +19,10 @@ enum TransactionState {
   Failed = 'state-failed'
 }
 
-function TransactionStatusWidget({transaction, callback}:TransactionStatusWidgetProps) {
+function TransactionStatusWidget({transaction, group, index, callback}:TransactionStatusWidgetProps) {
   const [response, setResponse] = useState<TransactionResponse>();
   const [receipt, setReceipt] = useState<TransactionReceipt>();
   const [status, setStatus] = useState(TransactionState.Submitted);
-  const [gasUsedEth, setGasUsedEth] = useState('');
   const complete = useRef(false);
 
   useEffect(() => {
@@ -33,10 +34,8 @@ function TransactionStatusWidget({transaction, callback}:TransactionStatusWidget
         if(complete.current) return;
         complete.current = true;
         setReceipt(rec);
-        const ethUsed = parseFloat(ethers.utils.formatEther(rec.effectiveGasPrice.mul(rec.gasUsed)));
-        setGasUsedEth(ethUsed.toFixed(5));
         setStatus(TransactionState.Complete);
-        callback(rec);
+        callback(group, index, rec);
       })
       .catch(() => {
         // Check the transaction hasn't been replaced (sped up)
@@ -44,7 +43,7 @@ function TransactionStatusWidget({transaction, callback}:TransactionStatusWidget
           if(complete.current) return;
           complete.current = true;
           setStatus(TransactionState.Failed);
-          callback();
+          callback(group, index);
         }
       })
     });
