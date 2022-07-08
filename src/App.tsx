@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import MintForm from './app/mintPage/MintPage';
 import SiteHeader from './components/siteHeader/SiteHeader';
 import { Col, Row, Toast, ToastContainer } from 'react-bootstrap';
 import './App.css';
 import { AlertMessage } from './hooks/useToast';
+import SettingsContextProvider from './application-state/settingsContext/SettingsContextProvider';
+import { UserContext } from './application-state/userContext/UserContext';
+import HomePage from './app/homePage/HomePage';
 
 function App() {
   const [toast, setToast] = useState<AlertMessage>();
-  
+  const {user} = useContext(UserContext)
+
   useEffect(() => {
     window.addEventListener('rogue_toast', displayToast);
 
@@ -23,15 +27,21 @@ function App() {
 
   return (
     <>
-      <Row className='h-100 g-0'>
-        <Col xs={2} className='h-100'>
-          <SiteHeader />
-        </Col>
-        <Col xs={10} className='h-100'>
-          <MintForm />
-        </Col>
-      </Row>
-
+    {
+      user.connected && user.licenced
+      ? <SettingsContextProvider>    
+          <Row className='h-100 g-0'>
+            <Col xs={2} className='h-100'>
+              <SiteHeader />
+            </Col>
+            <Col xs={10} className='h-100'>
+              <MintForm />
+            </Col>
+          </Row>
+        </SettingsContextProvider>
+      : <HomePage />
+    }
+     
       <ToastContainer className="p-3" position="top-end">
         {toast ? 
           <Toast autohide={toast.type !== "error"} delay={3000} className={`toast--${toast.type}`} onClose={() => setToast(undefined)}>

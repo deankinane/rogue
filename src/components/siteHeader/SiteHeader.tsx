@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Tab, Nav } from 'react-bootstrap';
 import { WalletFill, Calendar2DateFill, GearFill } from 'react-bootstrap-icons';
-import { Link } from 'react-router-dom';
 import { loadTrendingMints } from '../../entities/IcyApi';
 import WalletConnectionWidget from '../walletConnectionWidget/WalletConnectionWidget';
 import './SiteHeader.css';
@@ -14,7 +13,7 @@ export default function SiteHeader() {
   return (
     <div className='header'>
       <div className="header__logo">
-        <Link to="/"><img src="./img/rogue_logo.svg" alt="ROGUE Logo - Mint NFTs Fast" /></Link>
+        <img src="./img/rogue_logo.svg" alt="ROGUE Logo - Mint NFTs Fast" />
         <div className="flex-grow-1 justify-content-end">
           <WalletConnectionWidget />
         </div>

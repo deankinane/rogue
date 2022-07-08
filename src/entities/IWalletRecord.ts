@@ -1,5 +1,3 @@
-import { BigNumber } from "ethers"
-
 export interface CollectionDetails {
   address: string
   name: string
@@ -19,6 +17,6 @@ export default interface IWalletRecord {
   name: string
   privateKey: string
   publicKey: string,
-  balance: BigNumber,
+  balance: string,
   contents: NFT[]
 }

@@ -1,11 +1,12 @@
 
 import { FunctionFragment } from "ethers/lib/utils"
-import { useEffect, useRef, useState } from "react";
+import { node } from "prop-types";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 import { ArrowClockwise, Stack } from "react-bootstrap-icons";
+import { SettingsContext } from "../../application-state/settingsContext/SettingsContext";
 import MintContract from "../../entities/MintContract";
 import { getReadValue } from "../../entities/ProviderFunctions";
-import useNodeStorage from "../../hooks/useNodeStorage";
 import './ViewableFunctionDetail.css';
 
 export interface ViewableFunctionDetailProps {
@@ -27,7 +28,7 @@ export default function ViewableFunctionDetail({
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState('');
   const [oldValue, setOldValue] = useState(false);
-  const [node] = useNodeStorage();
+  const {settings} = useContext(SettingsContext)
   const intial = useRef('');
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function ViewableFunctionDetail({
       setOldValue(true);
     },5000)
 
-    const val = await getReadValue(contract, functionFragment.name, node)
+    const val = await getReadValue(contract, functionFragment.name, settings.node)
     clearTimeout(retry);
     setValue(val.toString());
     setOldValue(false);

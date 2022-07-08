@@ -1,15 +1,14 @@
 import React, { } from 'react'
-import { Col, Row } from 'react-bootstrap'
+import { Row } from 'react-bootstrap'
 import IWalletRecord from '../../entities/IWalletRecord'
 import WalletItem from './walletItem/WalletItem'
 import './WalletContents.css'
 
 export interface WalletContentsProps {
   wallet : IWalletRecord
-  filterHiddenCollections: () => void
 }
 
-function WalletContents({wallet, filterHiddenCollections}: WalletContentsProps) {  
+function WalletContents({wallet}: WalletContentsProps) {  
   return (
     <div className='wallet-container mb-4 pb-4'>
       <div className='d-flex wallet-container-header mb-4'>
@@ -19,9 +18,7 @@ function WalletContents({wallet, filterHiddenCollections}: WalletContentsProps) 
       
       <Row className='g-3'>
         {wallet.contents 
-        ? wallet.contents.map((x,i) => 
-          x.collection.hidden ? <></> : <WalletItem key={i} nft={x} filterHiddenCollections={filterHiddenCollections} />
-        )
+        ? wallet.contents.map((x,i) => <WalletItem key={i} nft={x} />)
         : <></>
         }
       </Row>

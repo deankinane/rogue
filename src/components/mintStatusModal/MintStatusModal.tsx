@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
+import React, { PropsWithChildren, useContext, useEffect, useRef, useState } from 'react'
 import { Button, Col, FormControl, InputGroup, Modal, Row, Spinner } from 'react-bootstrap'
 import { PendingTransactionGroup, sendTransaction, TransactionRequestGroup } from '../../entities/ProviderFunctions'
 import TransactionStatusWidget from './transactionStatusWidget/TransactionStatusWidget'
@@ -8,18 +8,18 @@ import useRecursiveTimeout from '../../hooks/useRecursiveTimeout';
 import { LightningChargeFill } from 'react-bootstrap-icons';
 import { TransactionState } from '../../entities/GlobalState';
 import { ethers } from 'ethers';
-import useNodeStorage from '../../hooks/useNodeStorage';
 import { TransactionReceipt } from '@ethersproject/providers';
 import Blocknative from 'bnc-sdk';
 import { Emitter, EthereumTransactionData } from 'bnc-sdk/dist/types/src/interfaces';
 import { BLOCKNATIVE_APPID } from '../../entities/constants';
+import { SettingsContext } from '../../application-state/settingsContext/SettingsContext';
 
 export interface MintStatusModalProps extends PropsWithChildren<any> {
   show: boolean
   onHide: () => void
   transactionRequestGroups: TransactionRequestGroup[],
   pendingTransactionGroups: PendingTransactionGroup[],
-  settings: TransactionState
+  transactionState: TransactionState
 }
 
 interface GasDistributionLevels {
@@ -34,13 +34,13 @@ interface TxnGasSettings {
   priority: number
 }
 
-function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransactionGroups, settings}:MintStatusModalProps) {
+function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransactionGroups, transactionState}:MintStatusModalProps) {
   const [gwei, setGwei] = useState<EthGasPrice>({base:0, max:0});
   const [newGas, setNewGas] = useState(0);
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>());
   const [resubmitting, setResubmitting] = useState(false);
   const [complete, setComplete] = useState(false);
-  const [node] = useNodeStorage();
+  const {settings} = useContext(SettingsContext)
   const [transactionCount, setTransactionCount] = useState(0);
   const completeCount = useRef(0);
   const failedCount = useRef(0);
@@ -59,13 +59,13 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   const importantTxnCount = useRef(0);
 
   useEffect(() => {
-    if(settings.maxGasFee) {
-      setNewGas(settings.maxGasFee)
+    if(transactionState.maxGasFee) {
+      setNewGas(transactionState.maxGasFee)
     }
-    setTransactionCount((settings.selectedWallets?.length || 0) * (settings.transactionsPerWallet || 0));
-    const maxSupply = settings.maxSupply > 0 ? settings.maxSupply : 6000;
-    importantTxnCount.current = Math.round(maxSupply / settings.unitsPerTxn);
-  },[settings])
+    setTransactionCount((transactionState.selectedWallets?.length || 0) * (transactionState.transactionsPerWallet || 0));
+    const maxSupply = transactionState.maxSupply > 0 ? transactionState.maxSupply : 6000;
+    importantTxnCount.current = Math.round(maxSupply / transactionState.unitsPerTxn);
+  },[transactionState])
 
   useEffect(() => {
     setPendingTransactions(pendingTransactionGroups);
@@ -79,7 +79,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
       onerror: e => console.log('error', e)
     });
 
-    const account = blocknative.current.account(settings.contractAddress)
+    const account = blocknative.current.account(transactionState.contractAddress)
     txnEmitter.current = account.emitter;
 
     txnEmitter.current.on("txPool", txn => {
@@ -114,7 +114,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
     };
     setGasDistLevels(dist);
 
-    const beating = sorted.filter(x => x < settings.maxGasFee);
+    const beating = sorted.filter(x => x < transactionState.maxGasFee);
     setCurrentlyBeating((beating.length/sorted.length)*100);
   }
 
@@ -142,12 +142,10 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   useRecursiveTimeout(async() => {
     const gasprice = await getCurrentGas();
     setGwei(gasprice);
-    setEffPrioFee(settings.maxGasFee - gasprice.base);
+    setEffPrioFee(transactionState.maxGasFee - gasprice.base);
   }, 2000);
 
   async function speedUpTransactions() {
-    if(!node) return //TODO something better
-
     setResubmitting(true);
 
     for(let i=0; i<transactionRequestGroups.length; i++) {
@@ -156,7 +154,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
           transactionRequestGroups[i].transactions[j].maxFeePerGas = ethers.utils.parseUnits(`${newGas}`, 'gwei')
           transactionRequestGroups[i].transactions[j].maxPriorityFeePerGas = ethers.utils.parseUnits(`${newGas}`, 'gwei')
           try {
-            pendingTransactions[i].transactions[j] = sendTransaction(transactionRequestGroups[i].transactions[j], transactionRequestGroups[i].wallet, node)
+            pendingTransactions[i].transactions[j] = sendTransaction(transactionRequestGroups[i].transactions[j], transactionRequestGroups[i].wallet, settings.node)
           } catch (error) {
             // TODO display message that they couldn't be resent as already being processed
           }
@@ -169,7 +167,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
 
   function resetState() {
     txnEmitter.current?.off('txPool');
-    blocknative.current?.unsubscribe(settings.contractAddress)
+    blocknative.current?.unsubscribe(transactionState.contractAddress)
 
     clearInterval(gasDistUpdateInterval.current);
     setPendingTransactions(new Array<PendingTransactionGroup>());
@@ -192,7 +190,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
     if (completeCount.current+failedCount.current === transactionCount) {
       setComplete(true);
       txnEmitter.current?.off('txPool');
-      blocknative.current?.unsubscribe(settings.contractAddress)
+      blocknative.current?.unsubscribe(transactionState.contractAddress)
       clearInterval(gasDistUpdateInterval.current);
     }
   }
@@ -228,7 +226,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
                     </InputGroup.Text>
                     <InputGroup.Text>
                       
-                      <span className='gas-widget__gwei ms-2'>Max: {settings.maxGasFee}</span>
+                      <span className='gas-widget__gwei ms-2'>Max: {transactionState.maxGasFee}</span>
                     </InputGroup.Text>
                     <InputGroup.Text>
                       
@@ -254,7 +252,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
                   value={newGas}
                   onChange={v => setNewGas(parseInt(v.currentTarget.value))}
                 />
-                <Button variant='success' disabled={newGas <= settings.maxGasFee} onClick={speedUpTransactions}>{resubmitting ? <Spinner size='sm' animation={'border'} /> : <><LightningChargeFill /> Speed Up</>}</Button>
+                <Button variant='success' disabled={newGas <= transactionState.maxGasFee} onClick={speedUpTransactions}>{resubmitting ? <Spinner size='sm' animation={'border'} /> : <><LightningChargeFill /> Speed Up</>}</Button>
               </InputGroup>
             </div>
 

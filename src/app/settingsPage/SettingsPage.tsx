@@ -1,49 +1,31 @@
-import React, { FormEvent, useEffect, useState } from 'react'
-import { Row, Col, Card, Button, InputGroup, Form } from 'react-bootstrap'
-import { Gear, GearFill, Save } from 'react-bootstrap-icons';
-import { useNavigate } from 'react-router-dom';
-import useIsLicensed from '../../hooks/useIsLicensed';
-import useNodeStorage from '../../hooks/useNodeStorage';
-import useOnMount from '../../hooks/useOnMount';
-import useSignedIn from '../../hooks/useSignedIn';
+import React, { FormEvent, useContext, useState } from 'react'
+import { Row, Col, Button, InputGroup, Form } from 'react-bootstrap'
+import { GearFill, Save } from 'react-bootstrap-icons';
+import { SettingsContext } from '../../application-state/settingsContext/SettingsContext';
 import useToast from '../../hooks/useToast';
 import './SettingsPage.css';
 
 function SettingsPage() {
-
-  const [node, setNode] = useNodeStorage();
-  const [rpcUrl, setRpcUrl] = useState('')
-  const licensed = useIsLicensed();
-  const navigate = useNavigate();
-  const [render, setRender] = useState(false);
-  const [signedIn] = useSignedIn();
-  const sendToast = useToast();
+  const sendToast = useToast()
+  const {settings, updateSettings} = useContext(SettingsContext)
+  const [updatedSettings, setUpdatedSettings] = useState(settings)
   
-  useEffect(() => {
-    if (!licensed.checked) return;
-    if (!licensed.licensed || !signedIn) navigate('/');
-    setRender(true);
-  },[licensed, signedIn])
-  
-  useOnMount(() => {
-    document.title = 'ROGUE - Mint NFTs Fast'
-    setRpcUrl(node ? node.rpcUrl : '')
-  })
+  function onNodeUrlChanged(url:string) {
+    setUpdatedSettings(s => {
+      s.node.rpcUrl = url
+      return s
+    })
+  }
 
   function onFormSubmit(e: FormEvent) {
     e.preventDefault();
     
-    setNode({
-      rpcUrl: rpcUrl,
-      chainId:  1
-    })
+    updateSettings(updatedSettings)
 
     sendToast('Settings Updated', 'Your changes have been saved.', 'success');
   }
 
   return (
-    !render ? <></> : 
-    <>
     <Form onSubmit={onFormSubmit}>
       <div className="d-flex mb-4">
         <h5 className='fw-bold mb-0 flex-grow-1'><GearFill className='me-3'/>Settings</h5>
@@ -60,13 +42,11 @@ function SettingsPage() {
             <InputGroup.Text>
               RPC Node
             </InputGroup.Text>
-            <Form.Control value={rpcUrl} onChange={v => setRpcUrl(v.currentTarget.value)} required/>
+            <Form.Control value={updatedSettings.node.rpcUrl} onChange={v => onNodeUrlChanged(v.currentTarget.value)} required/>
           </InputGroup>
         </Col>
       </Row>
-      </Form>
-    </>
-    
+    </Form>
   )
 }
 

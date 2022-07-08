@@ -1,18 +1,21 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { PlusCircleFill, WalletFill } from 'react-bootstrap-icons';
+import { WalletContext } from '../../application-state/walletContext/WalletContext';
 import AddWalletModal from '../../components/addWalletModal/AddWalletModal';
 import WalletContents from '../../components/walletContents/WalletContents';
 import IWalletRecord from '../../entities/IWalletRecord';
 import './WalletManager.css';
 
-export interface WalletManagerProps {
-  wallets: IWalletRecord[],
-  onUpdateWallets: (wallets:IWalletRecord[]) => void
-  filterHiddenCollections: () => void
-}
-function WalletManager({wallets, onUpdateWallets, filterHiddenCollections}:WalletManagerProps) {
+// export interface WalletManagerProps {
+//   wallets: IWalletRecord[],
+//   onUpdateWallets: (wallets:IWalletRecord[]) => void
+//   filterHiddenCollections: () => void
+// }
+function WalletManager() {
   const [addWalletModalVisible, setAddWalletModalVisible] = useState(false);
+
+  const {wallets, addWallet} = useContext(WalletContext);
 
   function onAddWalletClick() {
     setAddWalletModalVisible(true);
@@ -21,8 +24,7 @@ function WalletManager({wallets, onUpdateWallets, filterHiddenCollections}:Walle
   function onAddWalletCallback(wallet?: IWalletRecord) {
     setAddWalletModalVisible(false);
     if(wallet){
-      wallets.push(wallet);
-      onUpdateWallets(wallets)
+      addWallet(wallet)
     }
   }
   
@@ -43,7 +45,7 @@ function WalletManager({wallets, onUpdateWallets, filterHiddenCollections}:Walle
             <PlusCircleFill className='me-2'/> Add Wallet
         </Button>
       </div>
-      {wallets.map((x,i) => <WalletContents key={i} wallet={x} filterHiddenCollections={filterHiddenCollections} />)}
+      {wallets.map((x,i) => <WalletContents key={i} wallet={x} />)}
 
       <AddWalletModal 
         show={addWalletModalVisible} 

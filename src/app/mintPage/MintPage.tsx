@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useState } from "react";
 import MintContract from "../../entities/MintContract";
 import ContractSearchBar from "../../components/contractSearchBar/ContractSearchBar";
 import FunctionSelector from "../../components/functionSelector/FunctionSelector";
@@ -11,40 +11,29 @@ import { FunctionFragment } from "ethers/lib/utils";
 import WalletSelector from "../../components/walletSelector/WalletSelector";
 import IWalletRecord from "../../entities/IWalletRecord";
 import { Calendar2DateFill, GearFill, Triangle, WalletFill } from "react-bootstrap-icons";
-import { getWalletBalance, PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
+import { PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
 import MintStatusModal from "../../components/mintStatusModal/MintStatusModal";
-import useNodeStorage from "../../hooks/useNodeStorage";
 import { BigNumber, ethers } from "ethers";
-import useWalletStorage from "../../hooks/useWalletStorage";
 import useOnMount from "../../hooks/useOnMount";
-import { useNavigate } from "react-router-dom";
-import useIsLicensed from "../../hooks/useIsLicensed";
-import useSignedIn from "../../hooks/useSignedIn";
 import useToast from "../../hooks/useToast";
 import ScheduleTaskModal from "../../components/scheduleTaskModal/ScheduleTaskModal";
 import { isBrowser } from 'react-device-detect';
 import CustomFunctionParam from "../../components/customFunctionParam/CustomFunctionParam";
 import WalletManager from "../walletManager/WalletManager";
 import SettingsPage from "../settingsPage/SettingsPage";
+import WalletContextProvider from "../../application-state/walletContext/WalletContextProvider";
+import { SettingsContext } from "../../application-state/settingsContext/SettingsContext";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
-  const [wallets, setWallets, updateWalletContents, filterHiddenCollections] = useWalletStorage();
-  const licensed = useIsLicensed();
-  const [signedIn] = useSignedIn();
-  const navigate = useNavigate();
-  const [render, setRender] = useState(false);
   const sendToast = useToast();
 
-  const [transactionState, setTransactionState] = useState<TransactionState>({
-    ...defaultTransactionState,
-    selectedWallets: [wallets[0]],
-  });
+  const [transactionState, setTransactionState] = useState<TransactionState>(defaultTransactionState);
   const [sentTransactionSettings, setSentTransactionSettings] = useState<TransactionState>(defaultTransactionState);
   const [sentTransactionRequests, setSentTransactionRequests] = useState<TransactionRequestGroup[]>(new Array<TransactionRequestGroup>());
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>())
   const [showMintStatusModal, setShowMintStatusModal] = useState(false);
-  const [node] =  useNodeStorage();
+  const {settings} = useContext(SettingsContext)
   const [totalPerWallet, setTotalPerWallet] = useState('');
   const [totalCost, setTotalCost] = useState('');
   const [minting, setMinting] = useState(false);
@@ -55,23 +44,7 @@ export default function MintPage() {
 
   useOnMount(async () => {
     document.title = 'ROGUE - Mint NFTs Fast'
-    if(node) {
-      for(let i=0; i<wallets.length; i++) {
-        wallets[i].balance = await getWalletBalance(wallets[i].publicKey, node)
-      }
-      setWallets(wallets);
-    }
   })
-
-  useEffect(() => {
-    if (!licensed.checked) return;
-    if (!licensed.licensed || !signedIn) navigate('/');
-    setRender(true);
-  },[licensed, signedIn])
-
-  useEffect(() => {
-    
-  }, wallets)
 
   function updateTransactionState(t: TransactionStateUpdate) {
     setTransactionState({
@@ -203,15 +176,15 @@ export default function MintPage() {
 
   async function mint() {
     setMinting(true);
-    if(!node) return //TODO display error
+
     if (!contract || !transactionState.selectedWallets) return; //TODO Display error
     transactionState.mintFunction = mintFunction;
     transactionState.customParams = needsManualParamSettings;
     setTransactionState(transactionState)
     
     try {
-      const txns = await prepareTransactions(contract, transactionState, node);
-      const responses = await sendTransactions(txns, node);
+      const txns = await prepareTransactions(contract, transactionState, settings.node);
+      const responses = await sendTransactions(txns, settings.node);
 
       setSentTransactionRequests(txns)
       setPendingTransactions(responses);
@@ -229,7 +202,6 @@ export default function MintPage() {
   }
 
   return (
-    !render ? <></> : 
     <>
     <Row className='g-0 h-100 w-100'>
       {/* MAIN COLUMN START */}
@@ -316,7 +288,9 @@ export default function MintPage() {
               <Card.Body className="d-flex flex-column">
                 <div>              
                   <p>Select Wallets</p>
-                  <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged} wallets={wallets}/>   
+                  <WalletContextProvider>
+                    <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged}/>     
+                  </WalletContextProvider>
                 </div>
                 <p className="mt-3">Mint Summary</p>
                 <InputGroup className="justify-content-end">
@@ -386,7 +360,9 @@ export default function MintPage() {
           </Nav>
           <Tab.Content>
             <Tab.Pane eventKey="wallets">
-              <WalletManager wallets={wallets} onUpdateWallets={x => setWallets(x)} filterHiddenCollections={filterHiddenCollections} />
+              <WalletContextProvider>
+                <WalletManager />
+              </WalletContextProvider>
             </Tab.Pane>
             <Tab.Pane eventKey="tasks">
               
@@ -402,7 +378,7 @@ export default function MintPage() {
       show={showMintStatusModal}
       pendingTransactionGroups={pendingTransactions}
       transactionRequestGroups={sentTransactionRequests}
-      settings={sentTransactionSettings}
+      transactionState={sentTransactionSettings}
       onHide={() => {setShowMintStatusModal(false)}}
     />
     <ScheduleTaskModal 

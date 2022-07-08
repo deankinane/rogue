@@ -1,32 +1,24 @@
-import { useEffect } from "react";
-import { Button, InputGroup } from "react-bootstrap";
-import { GearFill, Wallet, WalletFill } from "react-bootstrap-icons";
-import useSignedIn from "../../hooks/useSignedIn";
-import useWalletConnected from "../../hooks/useWalletConnected";
+import { useContext } from "react"
+import { Button, InputGroup } from "react-bootstrap"
+import { WalletFill } from "react-bootstrap-icons"
+import { UserContext } from "../../application-state/userContext/UserContext"
+import './WalletConnectionWidget.css'
 
 export default function WalletConnectionWidget() {
-  
-  const [connectedWallet, connectWallet] = useWalletConnected();
-  const [signedIn, signature, signIn] = useSignedIn();
-
-  useEffect(() => {
-    if(connectedWallet.connected && !signedIn) {
-      signIn();
-    }
-  },[connectedWallet, signedIn])
+  const {user, connectUser} = useContext(UserContext)
 
   async function connectButtonClick(event: React.MouseEvent<HTMLButtonElement>) {
-    connectWallet();
+    connectUser()
   }
 
   return (
-    <div style={{"width":"120px"}} className='float-end'>
+    <div className='float-end wallet-connection-widget'>
       {
-        connectedWallet.connected
+        user.connected
         ? (
           <InputGroup>
           <InputGroup.Text><WalletFill/></InputGroup.Text>
-          <InputGroup.Text>{connectedWallet.address?.substring(0,6)}...</InputGroup.Text>
+          <InputGroup.Text>{user.address.substring(0,6)}...</InputGroup.Text>
         </InputGroup>
         )
         : (
@@ -34,5 +26,5 @@ export default function WalletConnectionWidget() {
         )
       }
     </div>
-  );
+  )
 }

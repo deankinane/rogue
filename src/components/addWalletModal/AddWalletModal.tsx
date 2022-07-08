@@ -1,24 +1,22 @@
-import { BigNumber, ethers } from 'ethers';
-import React, { FormEvent, useState } from 'react'
+import { ethers } from 'ethers';
+import React, { FormEvent, useContext, useState } from 'react'
 import { Button, Form, Modal, ModalProps, Spinner } from 'react-bootstrap'
 import IWalletRecord from '../../entities/IWalletRecord'
 import { getWalletBalance } from '../../entities/ProviderFunctions';
-import useNodeStorage from '../../hooks/useNodeStorage';
-import useWalletStorage from '../../hooks/useWalletStorage';
 import SimpleCrypto from 'simple-crypto-js';
-import useWalletConnected from '../../hooks/useWalletConnected';
+import { WalletContext } from '../../application-state/walletContext/WalletContext';
+import { UserContext } from '../../application-state/userContext/UserContext';
 
 interface AddWalletModalProps extends ModalProps {
   callback: (wallet?: IWalletRecord ) => void
 }
 
 function AddWalletModal({callback, ...props}: AddWalletModalProps) {
-  const [wallets, setWallets] = useWalletStorage();
+  const {wallets} = useContext(WalletContext)
   const [walletName, setWalletName] = useState("");
   const [privateKey, setPrivateKey] = useState("");
   const [working, setWorking] = useState(false);
-  const [node] = useNodeStorage();
-  const [walletInfo] = useWalletConnected();
+  const {user} = useContext(UserContext)
 
   async function onAddButtonClicked(e: FormEvent) {
     e.preventDefault();
@@ -34,26 +32,21 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
     setWorking(true);
     const etherWallet = new ethers.Wallet(privateKey);
 
-    const simpleCrypto = new SimpleCrypto(walletInfo.address); 
+    const simpleCrypto = new SimpleCrypto(user.address); 
     const encrypted = simpleCrypto.encrypt(privateKey);
 
     const newWallet: IWalletRecord = {
       name: walletName,
       privateKey: encrypted,
       publicKey: etherWallet.address,
-      balance: BigNumber.from(0),
+      balance: "0",
       contents: []
     };
 
-    if (node) {
-      newWallet.balance = await getWalletBalance(etherWallet.address, node);
-    }
+    newWallet.balance = await getWalletBalance(etherWallet.address);
 
-    wallets.push(newWallet);
-    setWallets(wallets);
-    setWorking(false);
     callback(newWallet);
-    
+    setWorking(false);
   }
 
   return (

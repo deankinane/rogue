@@ -1,12 +1,12 @@
 import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
-import { Bytes, Contract, ethers } from "ethers";
+import { Contract, ethers } from "ethers";
 import SimpleCrypto from "simple-crypto-js";
-import { ROGUE_SESSION_ADDRESS } from "../hooks/useWalletConnected";
 import { ParamTypes } from "./constants";
 import { CustomParam, TransactionState } from "./GlobalState";
-import INodeRecord from "./INodeRecord";
+import {INodeRecord} from "../application-state/settingsContext/ISettingsState";
 import IWalletRecord from "./IWalletRecord";
 import MintContract from "./MintContract";
+import { ROGUE_SESSION_ADDRESS } from "../application-state/userContext/UserContextProvider";
 
 async function getReadValue(mintContract : MintContract, func:string, node: INodeRecord) : Promise<any> {
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
@@ -17,10 +17,11 @@ async function getReadValue(mintContract : MintContract, func:string, node: INod
   return contract.functions[func]();
 }
 
-async function getWalletBalance(address:string, node: INodeRecord) : Promise<any> {
-  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);  
+async function getWalletBalance(address:string) : Promise<string> {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);  
   const balance = await provider.getBalance(address)
-  return ethers.utils.formatEther(balance);
+  
+  return parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
 }
 
 export interface TransactionRequestGroup {

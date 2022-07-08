@@ -1,23 +1,22 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { ArchiveFill, EyeSlashFill } from 'react-bootstrap-icons'
+import { WalletContext } from '../../../application-state/walletContext/WalletContext'
 import { NFT } from '../../../entities/IWalletRecord'
-import useHiddenCollections from '../../../hooks/useHiddenCollections'
 import ConfirmationDialog from '../../confrimationDialog/ConfirmationDialog'
 import './WalletItem.css'
 
 export interface WalletItemProps {
   nft: NFT
-  filterHiddenCollections: () => void
 }
 
-function WalletItem({nft, filterHiddenCollections}:WalletItemProps) {
+function WalletItem({nft}:WalletItemProps) {
+  const {hideCollection} = useContext(WalletContext);
+
   const [image, setImage] = useState('')
   const [hover, setHover] = useState(false)
   const [showModal, setShowModal] = useState(false)
-
-  const [hidden, setHidden] = useHiddenCollections()
-
+  
   useEffect(() => {
     if(nft)
       setImage(nft.image)
@@ -32,13 +31,14 @@ function WalletItem({nft, filterHiddenCollections}:WalletItemProps) {
   }
 
   function confirmHideCollection() {
-    hidden.push(nft.collection.address)
-    setHidden(hidden)
+    hideCollection(nft.collection.address)
     setShowModal(false)
-    filterHiddenCollections()
   }
 
   return (
+    nft.collection.hidden 
+    ? <></>
+    :
     <>
     
     <div className='wallet-item' onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>

@@ -1,15 +1,17 @@
-import React, { ChangeEvent, useEffect, useRef } from 'react'
+import React, { ChangeEvent, useContext, useEffect, useRef } from 'react'
 import { Col, Form, Row } from 'react-bootstrap';
+import { WalletContext } from '../../application-state/walletContext/WalletContext';
 import IWalletRecord from '../../entities/IWalletRecord'
 import './WalletSelector.css'
+import WalletSwitch from './walletSwitch/WalletSwitch';
 
 export interface WalletSelectorProps {
-  wallets: IWalletRecord[]
   onWalletSelectionChanged: (selectedWallets: IWalletRecord[]) => void
 }
 
-function WalletSelector({wallets, onWalletSelectionChanged}:WalletSelectorProps) {
-  const selectedWallets = useRef(new Array<IWalletRecord>());
+function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
+  const {wallets, updateWalletBalances} = useContext(WalletContext)
+  const selectedWallets = useRef(new Array<IWalletRecord>())
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -18,6 +20,7 @@ function WalletSelector({wallets, onWalletSelectionChanged}:WalletSelectorProps)
     if(wallets.length > 0 && selectedWallets.current.length === 0) {
       selectedWallets.current.push(wallets[0]);
       onWalletSelectionChanged(selectedWallets.current)
+      updateWalletBalances()
       loaded.current = true;
     }
   }, [wallets])
@@ -38,15 +41,10 @@ function WalletSelector({wallets, onWalletSelectionChanged}:WalletSelectorProps)
       <Row className='g-2'>
         {wallets.map((w, i) => (
           <Col key={i} xs={12} xl={6} >
-            <div className='wallet-selector d-flex'>
-              <Form.Check className='wallet-selector__checkbox'
-                type='switch'
-                defaultChecked={i===0}
-                onChange={e => onCheckStateChanged(e, w)}
-                label={w.name}
-              />
-              <p className='text-end flex-grow-1 mb-0 text-secondary'>{parseFloat(w.balance.toString()).toFixed(3)}</p>
-            </div>
+            <WalletSwitch 
+              defaultState={i===0} 
+              wallet={w} 
+              onCheckStateChanged={onCheckStateChanged} />
           </Col>
         ))}
       </Row>

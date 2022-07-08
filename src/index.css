@@ -396,7 +396,8 @@ input {
 
 .nav {
   padding: 1.5rem 0 1.5rem 1.5rem;
-  border-bottom: 1px solid #4b396c6b
+  border-bottom: 1px solid #4b396c6b;
+  box-shadow: 0 6px 15px 0 rgb(0 0 0 / 28%);
 }
 
 .dark-panel-section-header {
