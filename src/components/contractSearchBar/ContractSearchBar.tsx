@@ -16,21 +16,21 @@ export default function ContractSearchBar({onContractLoaded}: ContractSearchBarP
   const [loading, setLoading] = useState(false)
   const [slug, setSlug] = useState('')
 
-  async function loadContract() {
+  function loadContract() {
     if (address === '') return;
     setLoading(true);
     const newContract = new MintContract(address);
-    try {
-      await newContract.init();
+    newContract.init().then(() => {
       setSlug(newContract.contractSlug)
       setAddress(address)
       setValid(true)
       onContractLoaded(newContract)
       setLoading(false)
-    } catch (e: any) {
+    })
+    .catch(e => {
       sendToast('Load Contract Failed', e.message, 'error');
       setLoading(false);
-    }
+    })
   }
 
   function setValidAddress(value: string) {

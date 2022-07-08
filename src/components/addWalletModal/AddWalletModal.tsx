@@ -5,7 +5,6 @@ import IWalletRecord from '../../entities/IWalletRecord'
 import { getWalletBalance } from '../../entities/ProviderFunctions';
 import useNodeStorage from '../../hooks/useNodeStorage';
 import useWalletStorage from '../../hooks/useWalletStorage';
-import useSignedIn from '../../hooks/useSignedIn';
 import SimpleCrypto from 'simple-crypto-js';
 import useWalletConnected from '../../hooks/useWalletConnected';
 
@@ -42,7 +41,8 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
       name: walletName,
       privateKey: encrypted,
       publicKey: etherWallet.address,
-      balance: BigNumber.from(0)
+      balance: BigNumber.from(0),
+      contents: []
     };
 
     if (node) {

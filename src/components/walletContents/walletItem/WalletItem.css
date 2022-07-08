@@ -1,0 +1,59 @@
+.wallet-item {
+  height: 100%;
+  width: calc(100%/4) !important;
+}
+
+.wallet-item-img {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border-top-right-radius:0.25rem;
+  border-top-left-radius:0.25rem;
+  overflow: hidden;
+}
+
+.wallet-item-img img {
+  max-width: 100%;
+  max-height: 100%;
+  transition: opacity ease-in-out 200ms;
+}
+
+.wallet-item-content {
+  font-size: 0.8rem;
+  background-color: #ffffff2b;
+  color: #fff;
+  padding: 0.5rem;
+  border-bottom-right-radius:0.25rem;
+  border-bottom-left-radius:0.25rem;
+  overflow: hidden;
+}
+
+.wallet-item-content__collection {
+  font-size: 0.7rem;
+  margin-bottom: 0.5rem;
+  text-overflow: ellipsis;
+}
+
+.wallet-item-content__name {
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+.wallet-item-overlay {
+  position: absolute;
+  opacity: 0;
+  transition: opacity ease-in-out 200ms;
+  z-index: 99;
+}
+
+
+.wallet-item img.hover {
+  opacity: 0.5;
+}
+
+.wallet-item-overlay.hover {
+  opacity: 1 !important;
+}
+

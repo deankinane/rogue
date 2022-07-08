@@ -20,16 +20,6 @@ body {
   background: linear-gradient(180deg, rgb(15, 4, 35) 0%, rgb(24 7 56) 50%);
 } 
 
-
-.nav-pills .nav-link {
-  border-radius: 0;
-  padding: 1em !important;
-}
-
-.nav-pills .nav-link:hover {
-  background-color: #375a7f
-}
-
 /* width */
 ::-webkit-scrollbar {
   width: 10px;
@@ -344,8 +334,32 @@ body::-webkit-scrollbar {
 
 .app-container {
   width: 100%;
-  max-width: 1500px;
-  margin: 0 auto;
+}
+
+.fixed-column {
+  position: fixed;
+  top: 5rem;
+  bottom: 2rem;
+  right: 0;
+  left: 0;
+}
+
+.scrollable-column {
+  overflow-y: scroll;
+  position: relative;
+  height: calc(100% - 3rem);
+  margin-top: 4rem;
+}
+
+.tab-content {
+  overflow-y: scroll;
+  position: relative;
+  height: calc(100% - 85px);
+  padding: 1.5rem;
+}
+
+.tab-content.light-panel {
+  height: calc(100% - 142px);
 }
 
 .h4.modal-title {
@@ -356,10 +370,64 @@ input {
   color-scheme: dark;
 }
 
+.form-control:disabled, .form-control[readonly] {
+  background-color: #00000073;
+  cursor: not-allowed;
+  color: #ffffff42 !important;
+}
+
 .contract-logo {
   height: 2rem;
-  float: right;
   margin-top: -0.25rem;
-  margin-left: 1rem;
+  margin-right: 1rem;
+  float:left;
   border-radius: 0.25rem;
+}
+
+.dark-panel {
+  background-color: #0f0720;
+  border-left: 1px solid #4b396c6b;
+  box-shadow: -5px 7px 15px 0 rgb(0 0 0 / 45%);
+}
+
+.nav-tabs {
+  padding-top: 1rem;
+}
+
+.nav {
+  padding: 1.5rem 0 1.5rem 1.5rem;
+  border-bottom: 1px solid #4b396c6b
+}
+
+.dark-panel-section-header {
+  border-bottom: 1px solid #4b396c6b
+}
+
+.nav-item {
+  color: #fff;
+  background-color: #0000;
+  border:none;
+}
+
+.nav-item svg {
+  margin-right: 0.5em;
+  margin-top: -2px;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  background-color: rgba(255, 255, 255, 0.115);
+}
+
+.nav-pills .nav-link {
+  border-radius: 0;
+  padding: 0.5em 1em;
+  margin: 0 1.5em 0 0;
+  background-color: #0000;
+  border-radius: 0.25em;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.nav-pills .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.115);
 }

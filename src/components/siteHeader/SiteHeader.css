@@ -5,43 +5,22 @@
 }
 
 .header {
-  padding: 0.7rem 1.5rem !important;
-  max-width: 1500px;
   margin: 0 auto;
+  background-color: #ffffff0f;
+  height: 100%;
+  border-right: 1px solid #6741af6b;
 }
 
 .header__logo {
   color: #fff;  
   display: flex;
-  height: 100%;
   font-size: 0.8rem;
   font-weight: bold;
+  padding: 1.5rem 1.5rem 0;
 }
 
 .header__logo img {
-  height: 2em;
+  height: 1.5em;
+  margin-top: 0.5em;
 }
 
-.header .navbar-nav a {
-  color: #fff !important;
-  text-decoration: none !important;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  padding: 0 1em;
-  margin-right: 1em;
-  font-weight: 300;
-  font-size: 0.9rem;
-}
-
-.header .navbar-nav a span {
-  padding-top: 1px;
-  display: inline-block;
-}
-
-.header .navbar-nav a:hover {
-  color: rgb(71 231 17) !important;
-}
-
-.header .navbar-nav a svg {
-  margin-top: -1px;
-  margin-right: 1em;
-}

@@ -1,7 +1,7 @@
 import { FunctionFragment, Interface } from "ethers/lib/utils";
 import { FragmentTypes, FunctionTypes } from "./constants";
 import { getContractSource } from "./EtherscanApi";
-import { loadCollectionDetails } from "./NFTEyeApi";
+import { loadCollectionDetails } from "./IcyApi";
 
 class MintContract {
   address: string;
@@ -31,17 +31,24 @@ class MintContract {
 
     this.contractName = data.ContractName;
     try {
-      const source = JSON.parse(data.SourceCode.replace("{{", "{").replace("}}","}"))
-
-      Object.entries(source.sources).forEach(item => {
-        this.contractSource += (item[1] as any).content;
-      });
+      let source: any;
+      if (data.SourceCode.startsWith("{{")) {
+        source = JSON.parse(data.SourceCode.replace("{{", "{").replace("}}","}"))
+        Object.entries(source.sources).forEach(item => {
+          this.contractSource += (item[1] as any).content;
+        });
+      }
+      else {
+        source = JSON.parse(data.SourceCode)
+        Object.entries(source).forEach(item => {
+          this.contractSource += (item[1] as any).content;
+        });
+      }      
 
     } catch (error) {
       this.contractSource = data.SourceCode;
     }
 
-    
     this.abi = new Interface(JSON.parse(data.ABI));
 
     // Find the payable and writable functions in the contract

@@ -4,29 +4,32 @@ import ContractSearchBar from "../../components/contractSearchBar/ContractSearch
 import FunctionSelector from "../../components/functionSelector/FunctionSelector";
 import ViewableFunctionDetail from "../../components/viewableFunctionDetail/ViewableFunctionDetail"; 
 import CodeBlock from "../../components/codeBlock/CodeBlock";
-import { Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
+import { Button, Card, Col, Form, InputGroup, Nav, Row, Spinner, Tab } from "react-bootstrap";
 import GasWidget from "../../components/gasWidget/GasWidget";
-import { defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
+import { CustomParam, defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
 import { FunctionFragment } from "ethers/lib/utils";
 import WalletSelector from "../../components/walletSelector/WalletSelector";
 import IWalletRecord from "../../entities/IWalletRecord";
-import { Triangle } from "react-bootstrap-icons";
+import { Calendar2DateFill, GearFill, Triangle, WalletFill } from "react-bootstrap-icons";
 import { getWalletBalance, PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
 import MintStatusModal from "../../components/mintStatusModal/MintStatusModal";
 import useNodeStorage from "../../hooks/useNodeStorage";
 import { BigNumber, ethers } from "ethers";
 import useWalletStorage from "../../hooks/useWalletStorage";
 import useOnMount from "../../hooks/useOnMount";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import useIsLicensed from "../../hooks/useIsLicensed";
 import useSignedIn from "../../hooks/useSignedIn";
 import useToast from "../../hooks/useToast";
 import ScheduleTaskModal from "../../components/scheduleTaskModal/ScheduleTaskModal";
 import { isBrowser } from 'react-device-detect';
+import CustomFunctionParam from "../../components/customFunctionParam/CustomFunctionParam";
+import WalletManager from "../walletManager/WalletManager";
+import SettingsPage from "../settingsPage/SettingsPage";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
-  const [wallets, setWallets] = useWalletStorage();
+  const [wallets, setWallets, updateWalletContents, filterHiddenCollections] = useWalletStorage();
   const licensed = useIsLicensed();
   const [signedIn] = useSignedIn();
   const navigate = useNavigate();
@@ -46,7 +49,9 @@ export default function MintPage() {
   const [totalCost, setTotalCost] = useState('');
   const [minting, setMinting] = useState(false);
   const [showScheduleTaskModal, setScheduleTaskModal] = useState(false);
+  const [mintFunction, setMintFunction] = useState<FunctionFragment>(FunctionFragment.from('temp() view returns (uint256)'));
   const [findFunction, setFindFunction] = useState('')
+  const [needsManualParamSettings, setNeedsManualParamSettings] = useState(false)
 
   useOnMount(async () => {
     document.title = 'ROGUE - Mint NFTs Fast'
@@ -63,6 +68,10 @@ export default function MintPage() {
     if (!licensed.licensed || !signedIn) navigate('/');
     setRender(true);
   },[licensed, signedIn])
+
+  useEffect(() => {
+    
+  }, wallets)
 
   function updateTransactionState(t: TransactionStateUpdate) {
     setTransactionState({
@@ -87,19 +96,35 @@ export default function MintPage() {
 
   function onSearchContract(newContract: MintContract) {
     setContract(newContract);
+    updateTransactionState({
+      contractAddress: newContract.address
+    });
+    document.title = `${newContract.contractName} - ROGUE - Mint NFTs Fast`
   }
   
   function onMintFunctionSelected(f: FunctionFragment) {
-    updateTransactionState({
-      mintFunction: f
-    });
-
+    setMintFunction(f);
     setFindFunction(f.name)
+    
+    if (!(f.inputs.length === 1 && f.inputs[0].type.startsWith('uint'))) {
+      setNeedsManualParamSettings(true)
+    }
+    else {
+      setNeedsManualParamSettings(false)
+    }
   }
 
-  function onMintFunctionParamChanged(param: string, value: string){
-    const params = transactionState.functionParams || new Map<string, string>();
-    params.set(param, value);
+  function onMintFunctionParamChanged(param: CustomParam){
+    const params = transactionState.functionParams || new Array<CustomParam>();
+    const idx = params.findIndex(x => x.name === param.name);
+
+    if (idx > -1) {
+      params[idx] = param
+    }
+    else {
+      params.push(param)
+    }
+
     updateTransactionState({
       functionParams: params
     });
@@ -180,7 +205,10 @@ export default function MintPage() {
     setMinting(true);
     if(!node) return //TODO display error
     if (!contract || !transactionState.selectedWallets) return; //TODO Display error
-
+    transactionState.mintFunction = mintFunction;
+    transactionState.customParams = needsManualParamSettings;
+    setTransactionState(transactionState)
+    
     try {
       const txns = await prepareTransactions(contract, transactionState, node);
       const responses = await sendTransactions(txns, node);
@@ -190,8 +218,8 @@ export default function MintPage() {
 
       setSentTransactionSettings(transactionState);
       setShowMintStatusModal(true);
-    } catch (error) {
-      sendToast('Error', JSON.stringify(error), 'error')
+    } catch (error:any) {
+      sendToast('Error', JSON.stringify(error.message), 'error')
     }
     setMinting(false);
   }
@@ -203,6 +231,173 @@ export default function MintPage() {
   return (
     !render ? <></> : 
     <>
+    <Row className='g-0 h-100 w-100'>
+      {/* MAIN COLUMN START */}
+      <Col xs={12} xl={8} className='d-flex flex-column h-100 p-4'>
+        <Row className='mb-4 mt-1'>
+          <Col>
+          {contract && contract.contractLogo ? <img className='contract-logo' src={contract.contractLogo} alt={`${contract.contractName} Logo`}/> : <Triangle className='contract-logo me-3' />}
+          <h5 className='fw-bold'>{contract ? contract.contractName : 'No Contract Loaded'}</h5>
+
+          </Col>
+        </Row>
+        <Row className="d-flex align-items-stretch mb-3 g-3">
+        <Col xs={12} lg={4}>
+          <Card  className="h-100">
+            <Card.Body>
+              <div>
+                <p className="mb-0">Load Contract</p>
+              </div>
+              
+            
+              <ContractSearchBar onContractLoaded={onSearchContract} />
+              <div className="clearfix"></div>
+              <p className="mt-3">Select Mint Function</p>
+                <FunctionSelector 
+                  label="Mint Function"
+                  functions={contract?.payables && contract?.payables.length > 0 ? contract?.payables : contract?.writables} 
+                  onFunctionSelected={onMintFunctionSelected}
+                />
+              
+            </Card.Body>
+          </Card>
+          
+          </Col>
+          <Col xs={12} lg={4}>
+            <Card className="h-100">
+              <Card.Body>
+                <p className="mb-0">Set Transaction Parameters</p>
+                <Row className="g-2 mt-2">
+                  <Col xs={12} xl={6}>
+                    <InputGroup>
+                      <InputGroup.Text>Mints per Txn</InputGroup.Text>
+                      <Form.Control type="number" min={1} step={1} value={transactionState.unitsPerTxn} onChange={onUnitsPerTxnChanged} disabled={needsManualParamSettings}/>
+                    </InputGroup>
+                  </Col>
+                  <Col xs={12} xl={6}>
+                    <InputGroup>
+                      <InputGroup.Text>Txns per Wallet</InputGroup.Text>
+                      <Form.Control type="number" min={1} value={transactionState.transactionsPerWallet} onChange={onTxnsPerWalletChanged} />
+                    </InputGroup>
+                  </Col>
+                </Row>
+                <Row className="g-2 mt-0">
+                  <Col xs={12} xl={6}>
+                    <InputGroup>
+                      <InputGroup.Text>Cost per Mint</InputGroup.Text>
+                      <Form.Control type="number" min={0} step={0.005} placeholder="ether" value={transactionState.pricePerUnit} onChange={onPricePerUnitChanged} disabled={needsManualParamSettings}/>
+                    </InputGroup>
+                  </Col>
+                  <Col xs={12} xl={6}>
+                    <InputGroup>
+                      <InputGroup.Text>Total per Wallet</InputGroup.Text>
+                      <Form.Control type="number" min={0} step={0.005} placeholder="ether" value={transactionState.totalCost} onChange={onTotalCostChanged} />
+                    </InputGroup>
+                  </Col>
+                </Row>
+                
+                {
+                  needsManualParamSettings && mintFunction.inputs.length > 0 ? (
+                    <>
+                      <p className="mt-3">Custom Function Parameters</p>
+                      {mintFunction?.inputs.map((x,i) => <CustomFunctionParam functionParam={x} key={i} onParamUpdated={onMintFunctionParamChanged} />)
+                      }
+                    </>
+                  )
+                  : <></> 
+                }
+                <p className="mt-3">Choose Gas Settings</p>
+                <GasWidget onGasPriceChanged={onGasFeeChanged}/>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col xs={12} lg={4}>
+            <Card className="h-100">
+              <Card.Body className="d-flex flex-column">
+                <div>              
+                  <p>Select Wallets</p>
+                  <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged} wallets={wallets}/>   
+                </div>
+                <p className="mt-3">Mint Summary</p>
+                <InputGroup className="justify-content-end">
+                  <InputGroup.Text className="flex-grow-1">Total Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
+                  <InputGroup.Text>Per Wallet: {totalPerWallet} ETH</InputGroup.Text>
+                  <InputGroup.Text>Total: <span className="fw-bold ms-1">{totalCost} ETH</span></InputGroup.Text>
+                </InputGroup>
+                <div className="flex-grow-1 d-flex justify-content-end">
+                  <Button 
+                    variant="secondary" 
+                    className="mt-3 align-self-end me-3" 
+                    disabled={contract === undefined}
+                    onClick={scheduleTaskClicked}
+                  >Schedule Task</Button>   
+                  <Button 
+                    style={{'width':'91px'}} 
+                    variant="success" 
+                    className="mt-3 align-self-end" 
+                    disabled={invalidConfiguration() || minting}
+                    onClick={mint}
+                  >{minting ? <Spinner size='sm' animation="border" /> : 'Mint Now'}</Button>    
+                </div>
+                  
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        <Row className="mb-3">
+          <Col xs={12}>
+            <div className="d-flex flex-row overflow-auto">
+            {
+              contract
+                ? contract.viewables.map((x,i) => (
+                  <ViewableFunctionDetail 
+                    key={i} 
+                    functionFragment={x} 
+                    contract={contract} 
+                    onSetUnitPriceClicked={onSetUnitPriceClicked} 
+                    onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked}
+                    onMaxSupplyLoaded={onMaxSupplyLoaded} />)
+                )
+                  
+                : <Card className="w-100 p-3">Read only values will display here</Card>
+            }
+            </div>        
+          </Col>
+        </Row>
+        {
+          isBrowser 
+          ? <CodeBlock findFunction={findFunction} code={contract ? contract?.contractSource : "// Contract source will display here"} />
+          : <></>
+        }
+      </Col>
+      {/* MAIN END START */}
+      <Col xs={12} xl={4} className="h-100 dark-panel">
+        <Tab.Container defaultActiveKey="wallets">
+          <Nav variant="pills">
+            <Nav.Item>
+              <Nav.Link eventKey="wallets"><WalletFill /> Wallets</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="tasks"><Calendar2DateFill /> Tasks</Nav.Link>
+            </Nav.Item>
+            <Nav.Item className="float-end">
+              <Nav.Link eventKey="settings"><GearFill /> Settings</Nav.Link>
+            </Nav.Item>
+          </Nav>
+          <Tab.Content>
+            <Tab.Pane eventKey="wallets">
+              <WalletManager wallets={wallets} onUpdateWallets={x => setWallets(x)} filterHiddenCollections={filterHiddenCollections} />
+            </Tab.Pane>
+            <Tab.Pane eventKey="tasks">
+              
+            </Tab.Pane>
+            <Tab.Pane eventKey="settings">
+              <SettingsPage />
+            </Tab.Pane>
+          </Tab.Content>
+        </Tab.Container>
+      </Col>
+    </Row>
     <MintStatusModal 
       show={showMintStatusModal}
       pendingTransactionGroups={pendingTransactions}
@@ -216,150 +411,7 @@ export default function MintPage() {
       onHide={() => {setScheduleTaskModal(false)}}
       contract={contract}
     />
-    <Row className='mb-3 g-2'>
-        <Col>
-          <h5 className='fw-bold mb-0'><Triangle className='me-3' />Mint</h5>
-        </Col>
-        <Col>
-        {contract && contract.contractLogo !== '' ? <img className='contract-logo' src={contract.contractLogo} alt={`${contract.contractName} Logo`}/> : <></>}
-          <h5 className='fw-bold float-end'>{contract ? contract.contractName : 'No Contract Loaded'}</h5>
-        </Col>
-      </Row>
-    <Row className="d-flex align-items-stretch mb-3 g-3">
-    <Col xs={12} lg={4}>
-      <Card  className="h-100">
-        <Card.Body>
-          <div>
-            <p className="mb-0">Load Contract</p>
-          </div>
-          
-        
-          <ContractSearchBar onContractLoaded={onSearchContract} />
-          <div className="clearfix"></div>
-          <p className="mt-3">Select Mint Function</p>
-            <FunctionSelector 
-              label="Mint Function"
-              functions={contract?.payables && contract?.payables.length > 0 ? contract?.payables : contract?.writables} 
-              onFunctionSelected={onMintFunctionSelected}
-            />
-          
-        </Card.Body>
-      </Card>
-      
-      </Col>
-      <Col xs={12} lg={4}>
-        <Card className="h-100">
-          <Card.Body>
-            <p className="mb-0">Set Transaction Parameters</p>
-            <Row className="g-2 mt-2">
-              <Col xs={12} xl={6}>
-                <InputGroup>
-                  <InputGroup.Text>Mints per Txn</InputGroup.Text>
-                  <Form.Control type="number" min={1} step={1} value={transactionState.unitsPerTxn} onChange={onUnitsPerTxnChanged} />
-                </InputGroup>
-              </Col>
-              <Col xs={12} xl={6}>
-                <InputGroup>
-                  <InputGroup.Text>Txns per Wallet</InputGroup.Text>
-                  <Form.Control type="number" min={1} value={transactionState.transactionsPerWallet} onChange={onTxnsPerWalletChanged} />
-                </InputGroup>
-              </Col>
-            </Row>
-            <Row className="g-2 mt-0">
-              <Col xs={12} xl={6}>
-                <InputGroup>
-                  <InputGroup.Text>Cost per Mint</InputGroup.Text>
-                  <Form.Control type="number" min={0} step={0.005} placeholder="ether" value={transactionState.pricePerUnit} onChange={onPricePerUnitChanged} />
-                </InputGroup>
-              </Col>
-              <Col xs={12} xl={6}>
-                <InputGroup>
-                  <InputGroup.Text>Total per Wallet</InputGroup.Text>
-                  <Form.Control type="number" min={0} step={0.005} placeholder="ether" value={transactionState.totalCost} onChange={onTotalCostChanged} />
-                </InputGroup>
-              </Col>
-            </Row>
-            
-            {
-              transactionState.mintFunction?.inputs && transactionState.mintFunction?.inputs.length>1 ? (
-                <>
-                  <p className="mt-3">Additional Function Parameters</p>
-                  {transactionState.mintFunction?.inputs.map((x,i) => 
-                    (i>0 ? (
-                      <InputGroup key={i} className="mt-3">
-                        <InputGroup.Text className="mw-30">{x.name}</InputGroup.Text>
-                        <Form.Control placeholder={x.type} type={x.type.startsWith('uint') ? 'number' : 'text'} onChange={v => onMintFunctionParamChanged(x.name, v.currentTarget.value)} />
-                      </InputGroup>)
-                    :<></>
-                    )
-                  )}
-                </>
-              )
-              : <></> 
-            }
-            <p className="mt-3">Choose Gas Settings</p>
-            <GasWidget onGasPriceChanged={onGasFeeChanged}/>
-          </Card.Body>
-        </Card>
-      </Col>
-      <Col xs={12} lg={4}>
-        <Card className="h-100">
-          <Card.Body className="d-flex flex-column">
-            <div>              
-              <p>Select Wallets</p>
-              <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged} wallets={wallets}/>   
-            </div>
-            <p className="mt-3">Mint Summary</p>
-            <InputGroup className="justify-content-end">
-              <InputGroup.Text className="flex-grow-1">Total Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
-              <InputGroup.Text>Per Wallet: {totalPerWallet} ETH</InputGroup.Text>
-              <InputGroup.Text>Total: <span className="fw-bold ms-1">{totalCost} ETH</span></InputGroup.Text>
-            </InputGroup>
-            <div className="flex-grow-1 d-flex justify-content-end">
-              <Button 
-                variant="secondary" 
-                className="mt-3 align-self-end me-3" 
-                disabled={contract === undefined}
-                onClick={scheduleTaskClicked}
-              >Schedule Task</Button>   
-              <Button 
-                style={{'width':'91px'}} 
-                variant="success" 
-                className="mt-3 align-self-end" 
-                disabled={invalidConfiguration() || minting}
-                onClick={mint}
-              >{minting ? <Spinner size='sm' animation="border" /> : 'Mint Now'}</Button>    
-            </div>
-               
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
-    <Row className="mb-3">
-      <Col>
-        <div className="d-flex flex-row overflow-auto">
-        {
-          contract
-            ? contract.viewables.map((x,i) => (
-              <ViewableFunctionDetail 
-                key={i} 
-                functionFragment={x} 
-                contract={contract} 
-                onSetUnitPriceClicked={onSetUnitPriceClicked} 
-                onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked}
-                onMaxSupplyLoaded={onMaxSupplyLoaded} />)
-            )
-              
-            : <Card className="w-100 p-3">Read only values will display here</Card>
-        }
-        </div>        
-      </Col>
-    </Row>
-    {
-      isBrowser 
-      ? <CodeBlock findFunction={findFunction} code={contract ? contract?.contractSource : "// Contract source will display here"} />
-      : <></>
-    }
+    
     </>
   )
 }

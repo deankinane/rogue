@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Button, InputGroup } from "react-bootstrap";
-import { Wallet } from "react-bootstrap-icons";
+import { GearFill, Wallet, WalletFill } from "react-bootstrap-icons";
 import useSignedIn from "../../hooks/useSignedIn";
 import useWalletConnected from "../../hooks/useWalletConnected";
 
@@ -20,12 +20,12 @@ export default function WalletConnectionWidget() {
   }
 
   return (
-    <div>
+    <div style={{"width":"120px"}} className='float-end'>
       {
         connectedWallet.connected
         ? (
           <InputGroup>
-          <InputGroup.Text><Wallet/></InputGroup.Text>
+          <InputGroup.Text><WalletFill/></InputGroup.Text>
           <InputGroup.Text>{connectedWallet.address?.substring(0,6)}...</InputGroup.Text>
         </InputGroup>
         )

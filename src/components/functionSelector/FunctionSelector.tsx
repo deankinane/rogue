@@ -6,10 +6,9 @@ export interface FunctionSelectorProps {
   label: string
   functions: FunctionFragment[] | undefined
   onFunctionSelected: (f:FunctionFragment) => void
-  children?: JSX.Element | JSX.Element[] | undefined
 }
 
-export default function FunctionSelector({label, functions, onFunctionSelected, children} : FunctionSelectorProps) {
+export default function FunctionSelector({label, functions, onFunctionSelected} : FunctionSelectorProps) {
   //const [selectedFunction, setSelectedFunction] = useState<FunctionFragment>();
   const selectField = useRef<HTMLSelectElement>(null);
   const previousSelection = useRef(0);

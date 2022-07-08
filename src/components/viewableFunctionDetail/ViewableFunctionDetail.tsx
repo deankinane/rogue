@@ -1,6 +1,6 @@
 
 import { FunctionFragment } from "ethers/lib/utils"
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 import { ArrowClockwise, Stack } from "react-bootstrap-icons";
 import MintContract from "../../entities/MintContract";
@@ -28,10 +28,14 @@ export default function ViewableFunctionDetail({
   const [type, setType] = useState('');
   const [oldValue, setOldValue] = useState(false);
   const [node] = useNodeStorage();
+  const intial = useRef('');
 
   useEffect(() => {
+    if(intial.current !== contract.address){
+      intial.current = contract.address;
       loadValue();
-  }, [contract]);
+    }
+  }, [functionFragment]);
 
   useEffect(() => {
     if (functionFragment.outputs) {

@@ -1,8 +1,9 @@
 import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
-import { Contract, ethers } from "ethers";
+import { Bytes, Contract, ethers } from "ethers";
 import SimpleCrypto from "simple-crypto-js";
 import { ROGUE_SESSION_ADDRESS } from "../hooks/useWalletConnected";
-import { TransactionState } from "./GlobalState";
+import { ParamTypes } from "./constants";
+import { CustomParam, TransactionState } from "./GlobalState";
 import INodeRecord from "./INodeRecord";
 import IWalletRecord from "./IWalletRecord";
 import MintContract from "./MintContract";
@@ -31,8 +32,8 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
   if (!(settings.mintFunction && settings.contractAddress
     && settings.unitsPerTxn && settings.maxGasFee && settings.selectedWallets
     && settings.transactionsPerWallet &&  mintContract.abi)) {
-
-      throw new Error("Invalid Transactions Configuration");
+      console.log(settings.contractAddress)
+      throw new Error("Invalid Transaction Configuration");
   }
   
   const result = new Array<TransactionRequestGroup>();
@@ -40,24 +41,27 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
 
   const totalMintCost = ethers.utils.parseEther(`${settings.totalCost || 0}`);
   
-  const params = new Array<any>();
   
-  if(settings.mintFunction.inputs.length > 0) {
-    params.push(settings.unitsPerTxn);
-
-    settings.mintFunction.inputs.forEach((x,i) => {
-      if(i>0) params.push(settings.functionParams?.get(x.name));
-    })
-  }
-  
-  const data = mintContract.abi.encodeFunctionData(settings.mintFunction, params);
   const txnsPerWallet = settings.transactionsPerWallet || 1;
   const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
   const simpleCrypto = new SimpleCrypto(sig);
 
   for(let w=0; w<settings.selectedWallets.length; w++) {
+    const params = new Array<any>();
+
+    if(settings.customParams) {
+      settings.mintFunction.inputs.forEach((x) => {
+        const param = settings.functionParams.find(f => f.name === x.name);
+        params.push(getParamValue(param, settings.selectedWallets[w].publicKey));
+      })
+    }
+    else if(settings.mintFunction.inputs.length === 1) {
+      params.push(settings.unitsPerTxn);
+    }
+    
+    const data = mintContract.abi.encodeFunctionData(settings.mintFunction, params);
+
     const transactions = new Array<TransactionRequest>();
-  
     const wallet = new ethers.Wallet(simpleCrypto.decrypt(settings.selectedWallets[w].privateKey).toString(), provider);
     const base_nonce = await provider.getTransactionCount(wallet.address);
 
@@ -88,6 +92,40 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
   }
 
   return result;
+}
+
+function getParamValue(param?: CustomParam, address?: string) {
+  if (param === undefined) return undefined;
+
+  if (param.type === ParamTypes.bytes32) {
+    if (param.isArray) {
+      const data: string = param.value.replace('[', '').replace(']', '');
+      const byteStrings = data.split(',').filter(x => x !== '');
+      return byteStrings;
+    }
+    
+    return param.value;
+  }
+
+  if (param.type === ParamTypes.address) {
+    if(param.isArray) {
+      return param.value.split(',').map(x => x.trim());
+    }
+
+    if(param.autoWalletAddress) return address;
+    
+    return param.value;
+  }
+  
+  if (param.type === ParamTypes.uint256) {
+    if(param.isArray) {
+      return param.value.split(',').map(x => parseInt(x.trim()));
+    }
+    
+    return parseInt(param.value);
+  }
+
+  return param.value;
 }
 
 export interface PendingTransactionGroup {

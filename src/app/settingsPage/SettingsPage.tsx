@@ -1,6 +1,6 @@
 import React, { FormEvent, useEffect, useState } from 'react'
 import { Row, Col, Card, Button, InputGroup, Form } from 'react-bootstrap'
-import { Gear, Save } from 'react-bootstrap-icons';
+import { Gear, GearFill, Save } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
 import useIsLicensed from '../../hooks/useIsLicensed';
 import useNodeStorage from '../../hooks/useNodeStorage';
@@ -44,31 +44,27 @@ function SettingsPage() {
   return (
     !render ? <></> : 
     <>
-      <Row className='mb-3'>
-        <Col className='d-flex align-items-center'>
-          <h5 className='fw-bold mb-0'><Gear className='me-3'/>Settings</h5>
-        </Col>
-      </Row>
+    <Form onSubmit={onFormSubmit}>
+      <div className="d-flex mb-4">
+        <h5 className='fw-bold mb-0 flex-grow-1'><GearFill className='me-3'/>Settings</h5>
+        <Button 
+          type='submit'
+          variant='success' 
+          className='mb-4'>
+            <Save className='me-2'/> Save Changes
+        </Button>
+      </div>
       <Row>
         <Col>
-          <Card>
-            <Card.Body className='p-3'>
-              <Form onSubmit={onFormSubmit}>
-                <InputGroup className='mt-3'>
-                  <InputGroup.Text>
-                    RPC Node
-                  </InputGroup.Text>
-                  <Form.Control value={rpcUrl} onChange={v => setRpcUrl(v.currentTarget.value)} required/>
-                </InputGroup>
-
-                <Button type='submit' variant='success' className='float-end mt-3'><Save className='me-1' /> Save Changes</Button>
-              </Form>
-              
-            </Card.Body>
-            
-          </Card>
+          <InputGroup>
+            <InputGroup.Text>
+              RPC Node
+            </InputGroup.Text>
+            <Form.Control value={rpcUrl} onChange={v => setRpcUrl(v.currentTarget.value)} required/>
+          </InputGroup>
         </Col>
       </Row>
+      </Form>
     </>
     
   )

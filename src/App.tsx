@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import MintForm from './app/mintPage/MintPage';
 import SiteHeader from './components/siteHeader/SiteHeader';
-import { Container, Toast, ToastContainer } from 'react-bootstrap';
-import {  Route, Routes } from 'react-router-dom';
-import WalletPage from './app/walletPage/WalletPage';
+import { Col, Row, Toast, ToastContainer } from 'react-bootstrap';
 import './App.css';
-import SettingsPage from './app/settingsPage/SettingsPage';
-import HomePage from './app/homePage/HomePage';
 import { AlertMessage } from './hooks/useToast';
 
 function App() {
@@ -22,29 +18,19 @@ function App() {
 
   const displayToast = (e:Event) => {
     const c = e as CustomEvent;
-    console.log(c)
     setToast(c.detail);
   }
 
   return (
     <>
-      <Container fluid className='p-0'>
-        <div className='header-wrapper'>
-          <SiteHeader/>
-        </div>
-      </Container>
-  
-      <div className='app-container flex-grow-1 d-flex flex-column p-4 pt-0'>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/wallets" element={<WalletPage />} />
-          <Route path="/mint" element={<MintForm />} />
-          <Route path="/mint/:contract" element={<MintForm />} />
-          <Route path="/tasks"element={<div/>} />
-          <Route path="/settings"element={<SettingsPage />} />
-          
-        </Routes>
-      </div>
+      <Row className='h-100 g-0'>
+        <Col xs={2} className='h-100'>
+          <SiteHeader />
+        </Col>
+        <Col xs={10} className='h-100'>
+          <MintForm />
+        </Col>
+      </Row>
 
       <ToastContainer className="p-3" position="top-end">
         {toast ? 
