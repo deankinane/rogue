@@ -1,8 +1,8 @@
 import React, { } from 'react'
 import { Row } from 'react-bootstrap'
-import IWalletRecord from '../../entities/IWalletRecord'
 import WalletItem from './walletItem/WalletItem'
 import './WalletContents.css'
+import { IWalletRecord } from '../../application-state/walletContext/WalletContext'
 
 export interface WalletContentsProps {
   wallet : IWalletRecord

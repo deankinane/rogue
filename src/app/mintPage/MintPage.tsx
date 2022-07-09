@@ -9,8 +9,7 @@ import GasWidget from "../../components/gasWidget/GasWidget";
 import { CustomParam, defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
 import { FunctionFragment } from "ethers/lib/utils";
 import WalletSelector from "../../components/walletSelector/WalletSelector";
-import IWalletRecord from "../../entities/IWalletRecord";
-import { Calendar2DateFill, GearFill, Triangle, WalletFill } from "react-bootstrap-icons";
+import { Calendar2DateFill, CollectionFill, GearFill, Triangle, WalletFill } from "react-bootstrap-icons";
 import { PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
 import MintStatusModal from "../../components/mintStatusModal/MintStatusModal";
 import { BigNumber, ethers } from "ethers";
@@ -23,6 +22,8 @@ import WalletManager from "../walletManager/WalletManager";
 import SettingsPage from "../settingsPage/SettingsPage";
 import WalletContextProvider from "../../application-state/walletContext/WalletContextProvider";
 import { SettingsContext } from "../../application-state/settingsContext/SettingsContext";
+import { IWalletRecord } from "../../application-state/walletContext/WalletContext";
+import CollectionManager from "../collectionManager/CollectionManager";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
@@ -56,15 +57,19 @@ export default function MintPage() {
   useEffect(() => {
     if(isNaN(transactionState.pricePerUnit) || isNaN(transactionState.totalCost) || isNaN(transactionState.transactionsPerWallet) || isNaN(transactionState.unitsPerTxn))
       return;
+    try {
+      const costPerTxn = ethers.utils.parseEther(`${transactionState.totalCost}`)
+      const gasPerTxn = ethers.utils.parseUnits(`${transactionState.maxGasFee * 100000}`, 'gwei')
+      const totalPerTxn = costPerTxn.add(gasPerTxn);
+      const totalPerWallet = totalPerTxn.mul(transactionState.transactionsPerWallet)
+      const total = totalPerWallet.mul(transactionState.selectedWallets.length)
 
-    const costPerTxn = ethers.utils.parseEther(`${transactionState.totalCost}`)
-    const gasPerTxn = ethers.utils.parseUnits(`${transactionState.maxGasFee * 100000}`, 'gwei')
-    const totalPerTxn = costPerTxn.add(gasPerTxn);
-    const totalPerWallet = totalPerTxn.mul(transactionState.transactionsPerWallet)
-    const total = totalPerWallet.mul(transactionState.selectedWallets.length)
-
-    setTotalPerWallet(parseFloat(ethers.utils.formatEther(totalPerWallet)).toFixed(4))
-    setTotalCost(parseFloat(ethers.utils.formatEther(total)).toFixed(4))
+      setTotalPerWallet(parseFloat(ethers.utils.formatEther(totalPerWallet)).toFixed(4))
+      setTotalCost(parseFloat(ethers.utils.formatEther(total)).toFixed(4))
+    } catch (error) {
+      
+    }
+    
   },[transactionState])
 
   function onSearchContract(newContract: MintContract) {
@@ -203,7 +208,7 @@ export default function MintPage() {
 
   return (
     <>
-    <Row className='g-0 h-100 w-100'>
+    <Row className='main-content-area'>
       {/* MAIN COLUMN START */}
       <Col xs={12} xl={8} className='d-flex flex-column h-100 p-4'>
         <Row className='mb-4 mt-1'>
@@ -352,6 +357,9 @@ export default function MintPage() {
               <Nav.Link eventKey="wallets"><WalletFill /> Wallets</Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link eventKey="collections"><CollectionFill /> Collections</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link eventKey="tasks"><Calendar2DateFill /> Tasks</Nav.Link>
             </Nav.Item>
             <Nav.Item className="float-end">
@@ -362,6 +370,11 @@ export default function MintPage() {
             <Tab.Pane eventKey="wallets">
               <WalletContextProvider>
                 <WalletManager />
+              </WalletContextProvider>
+            </Tab.Pane>
+            <Tab.Pane eventKey="collections">
+              <WalletContextProvider>
+                <CollectionManager />
               </WalletContextProvider>
             </Tab.Pane>
             <Tab.Pane eventKey="tasks">

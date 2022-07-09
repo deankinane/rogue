@@ -1,21 +1,23 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { PlusCircleFill, WalletFill } from 'react-bootstrap-icons';
-import { WalletContext } from '../../application-state/walletContext/WalletContext';
+import { IWalletRecord, WalletContext } from '../../application-state/walletContext/WalletContext';
 import AddWalletModal from '../../components/addWalletModal/AddWalletModal';
 import WalletContents from '../../components/walletContents/WalletContents';
-import IWalletRecord from '../../entities/IWalletRecord';
 import './WalletManager.css';
 
-// export interface WalletManagerProps {
-//   wallets: IWalletRecord[],
-//   onUpdateWallets: (wallets:IWalletRecord[]) => void
-//   filterHiddenCollections: () => void
-// }
 function WalletManager() {
   const [addWalletModalVisible, setAddWalletModalVisible] = useState(false);
+  const {wallets, addWallet, updateWalletContents, updateWalletBalances} = useContext(WalletContext);
+  const intitialLoad = useRef(true)
 
-  const {wallets, addWallet} = useContext(WalletContext);
+  useEffect(() => {
+    if (intitialLoad.current) {
+      intitialLoad.current = false
+      updateWalletContents()
+      updateWalletBalances()
+    }
+  },[])
 
   function onAddWalletClick() {
     setAddWalletModalVisible(true);
@@ -36,12 +38,12 @@ function WalletManager() {
 
   return (
     <div className='p-1'>
-      <div className="d-flex mb-4 dark-panel-section-header">
-        <h5 className='fw-bold mb-0 flex-grow-1'><WalletFill className='me-3'/>Manage Wallets</h5>
+      <div className="d-flex pb-4 mb-4 dark-panel-section-header">
+        <h5 className='fw-bold flex-grow-1'><WalletFill className='me-3'/>Manage Wallets</h5>
         <Button 
           variant='info' 
           onClick={onAddWalletClick}
-          className='mb-4'>
+          >
             <PlusCircleFill className='me-2'/> Add Wallet
         </Button>
       </div>

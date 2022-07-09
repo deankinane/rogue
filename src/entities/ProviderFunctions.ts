@@ -4,9 +4,9 @@ import SimpleCrypto from "simple-crypto-js";
 import { ParamTypes } from "./constants";
 import { CustomParam, TransactionState } from "./GlobalState";
 import {INodeRecord} from "../application-state/settingsContext/ISettingsState";
-import IWalletRecord from "./IWalletRecord";
 import MintContract from "./MintContract";
 import { ROGUE_SESSION_ADDRESS } from "../application-state/userContext/UserContextProvider";
+import { IWalletRecord } from "../application-state/walletContext/WalletContext";
 
 async function getReadValue(mintContract : MintContract, func:string, node: INodeRecord) : Promise<any> {
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);

@@ -1,10 +1,9 @@
 import { ethers } from 'ethers';
 import React, { FormEvent, useContext, useState } from 'react'
 import { Button, Form, Modal, ModalProps, Spinner } from 'react-bootstrap'
-import IWalletRecord from '../../entities/IWalletRecord'
 import { getWalletBalance } from '../../entities/ProviderFunctions';
 import SimpleCrypto from 'simple-crypto-js';
-import { WalletContext } from '../../application-state/walletContext/WalletContext';
+import { IWalletRecord, WalletContext } from '../../application-state/walletContext/WalletContext';
 import { UserContext } from '../../application-state/userContext/UserContext';
 
 interface AddWalletModalProps extends ModalProps {

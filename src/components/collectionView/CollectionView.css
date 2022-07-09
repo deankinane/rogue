@@ -1,0 +1,39 @@
+.collection-view {
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  background-color: #ffffff2b;
+  border-radius: 0.25rem;
+  box-shadow: 0 6px 15px 0 rgb(0 0 0 / 28%);
+}
+
+.collection-view__logo {
+  height: 4rem;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+.collection-view img {
+  width: 100%;
+}
+
+.collection-view__details {
+  font-size: 0.9rem;
+  font-weight: 200;
+}
+
+.collection-view__collapse {
+  display: none;
+  overflow: hidden;
+  transition: height ease-in-out 200ms;
+  height: 0px;
+}
+
+.collection-view__collapse.expanded {
+  display: block;
+  height: auto;
+}

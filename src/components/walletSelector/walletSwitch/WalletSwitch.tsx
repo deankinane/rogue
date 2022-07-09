@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react'
 import { Form } from 'react-bootstrap'
-import IWalletRecord from '../../../entities/IWalletRecord'
+import { IWalletRecord } from '../../../application-state/walletContext/WalletContext'
+
 export interface WalletSwitchProps {
   wallet: IWalletRecord
   defaultState: boolean

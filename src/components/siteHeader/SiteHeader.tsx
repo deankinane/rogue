@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Tab, Nav } from 'react-bootstrap';
-import { WalletFill, Calendar2DateFill, GearFill } from 'react-bootstrap-icons';
+import { GraphUpArrow, Triangle, FileBinary } from 'react-bootstrap-icons';
 import { loadTrendingMints } from '../../entities/IcyApi';
 import WalletConnectionWidget from '../walletConnectionWidget/WalletConnectionWidget';
 import './SiteHeader.css';
@@ -8,7 +8,7 @@ import './SiteHeader.css';
 export default function SiteHeader() {
 
   useEffect(() => {
-    loadTrendingMints()
+    // loadTrendingMints()
   },[])
   return (
     <div className='header'>
@@ -21,13 +21,13 @@ export default function SiteHeader() {
       <Tab.Container defaultActiveKey="sales">
           <Nav variant="pills">
             <Nav.Item>
-              <Nav.Link eventKey="sales">Trending</Nav.Link>
+              <Nav.Link eventKey="sales"><GraphUpArrow />Trending</Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="mints">Minting</Nav.Link>
+              <Nav.Link eventKey="mints"><Triangle />Minting</Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="contracts">Contracts</Nav.Link>
+              <Nav.Link eventKey="contracts"><FileBinary />Contracts</Nav.Link>
             </Nav.Item>
           </Nav>
           <Tab.Content className='light-panel'>

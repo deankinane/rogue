@@ -1,84 +1,88 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import IPropsChildren from '../../common/IPropsChildren';
 import { loadWalletContents } from '../../entities/IcyApi';
-import IWalletRecord, { NFT } from '../../entities/IWalletRecord';
 import { getWalletBalance } from '../../entities/ProviderFunctions';
 import useLocalStorage from '../../hooks/useLocalStorage';
-import { IWalletState, WalletContext } from './WalletContext'
+import { IWalletRecord, IWalletState, INft, WalletContext, ICollectionView } from './WalletContext'
 
 function WalletContextProvider({children}:IPropsChildren) {
   const ROGUE_STORAGE_WALLETS = 'ROGUE_STORAGE_WALLETS';
+  const ROGUE_STORAGE_COLLECTIONS = 'ROGUE_STORAGE_COLLECTIONS';
   const ROGUE_STORAGE_HIDDENCOLLECTIONS = 'ROGUE_STORAGE_HIDDENCOLLECTIONS';
   const [storedWallets, setStoredWallets] = useLocalStorage<IWalletRecord[]>(ROGUE_STORAGE_WALLETS, []);
+  const [storedCollections, setStoredCollections] = useLocalStorage<ICollectionView[]>(ROGUE_STORAGE_COLLECTIONS, []);
   const [hiddenCollections, setHiddenCollections] = useLocalStorage<string[]>(ROGUE_STORAGE_HIDDENCOLLECTIONS, []);
-  
 
-  const [wallets, setWallets] = useState<IWalletRecord[]>([])
-  
-  useEffect(() => {
-    setWallets(storedWallets || [])
-  },[])
+  const [wallets, setWallets] = useState<IWalletRecord[]>(storedWallets)
+  const [collections, setCollections] = useState<ICollectionView[]>(storedCollections)
 
   function addWallet(wallet: IWalletRecord) {
-    setWallets(ws => {
-      ws.push(wallet)
-      setStoredWallets(ws)
-      return ws
-    })
+    storedWallets.push(wallet)
+    setStoredWallets(storedWallets)
+    setWallets(storedWallets)
+    updateWalletContents()
   }
 
   function hideCollection(address: string) {
     hiddenCollections.push(address);
     setHiddenCollections(hiddenCollections);
-
-    setWallets(ws => {
-      ws.forEach(w => {
-        w.contents.forEach(nft => {
-          nft.collection.hidden = hiddenCollections.findIndex(c => nft.collection.address === c) > -1
-        })
+    storedWallets.forEach(w => {
+      w.contents.forEach(nft => {
+        nft.collection.hidden = hiddenCollections.findIndex(c => nft.collection.address === c) > -1
       })
-
-      setStoredWallets(ws)
-      return ws
     })
+    setStoredWallets(storedWallets)
+    setWallets(storedWallets)
   }
 
   async function updateWalletContents() {
-    const contents = new Array<NFT[]>()
-    
-    for(let i=0; i<wallets.length; i++) {
-      contents[i] = await loadWalletContents(wallets[i].publicKey);      
+    const collections = new Array<ICollectionView>()
+
+    for(let i=0; i<storedWallets.length; i++) {
+      storedWallets[i].contents = await loadWalletContents(storedWallets[i].publicKey);
+      storedWallets[i].contents.forEach(nft => {
+        nft.collection.hidden = hiddenCollections.findIndex(c => nft.collection.address === c) > -1
+        const idx = collections.findIndex(c => c.collection.address === nft.collection.address)
+        if (idx < 0) {
+          const tokens = new Array<INft>()
+          tokens.push(nft)
+          collections.push({
+            collection: nft.collection,
+            tokens: tokens
+          })
+        }
+        else {
+          collections[idx].tokens.push(nft)
+        }
+      });
     }
 
-    setWallets(ws => {
-      for(let i=0; i<ws.length; i++) {
-        ws[i].contents = contents[i]
-      }
+    collections.sort((x,y) => {
+      const textA = x.collection.name.toUpperCase();
+      const textB = y.collection.name.toUpperCase();
+      return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+    })
 
-      setStoredWallets(ws)
-      return ws
-    })  
+    setStoredCollections(collections)
+    setCollections(cs => (collections))
+    setStoredWallets(storedWallets)
+    setWallets(ws => (storedWallets))
   }
 
   async function updateWalletBalances() {
-    const balances = new Array<string>();
-
-    for(let i=0; i<wallets.length; i++) {
-      balances[i] = await getWalletBalance(wallets[i].publicKey);      
+    
+    for(let i=0; i<storedWallets.length; i++) {
+      storedWallets[i].balance = await getWalletBalance(wallets[i].publicKey);      
     }
     
-    setWallets(ws => {
-      for(let i=0; i<ws.length; i++) {
-        ws[i].balance = balances[i]
-      }
-
-      setStoredWallets(ws)
-      return ws
-    })  
+    setStoredWallets(storedWallets)
+    setWallets(ws => (storedWallets))
   }
+
 
   const walletState: IWalletState = {
     wallets: wallets || [],
+    collections: collections || [],
     addWallet: addWallet,
     hideCollection: hideCollection,
     updateWalletContents: updateWalletContents,

@@ -1,15 +1,13 @@
-import { CollectionDetails, NFT } from "./IWalletRecord";
+import { ICollectionDetails, INft } from "../application-state/walletContext/WalletContext";
 
 const API_BASE_URL:string = 'https://graphql.icy.tools/graphql/';
-
-
 
 interface GraphQLRequest {
   query: string
   variables: {}
 }
 
-async function loadCollectionDetails(address:string): Promise<CollectionDetails | null> {
+async function loadCollectionDetails(address:string): Promise<ICollectionDetails | null> {
   const request: GraphQLRequest = {
     query: `
     query TokenImages($address: String!) {
@@ -91,7 +89,7 @@ async function loadTrendingMints(): Promise<any> {
 }
 
 
-async function loadWalletContents(address:string, after?:string): Promise<NFT[]> {
+async function loadWalletContents(address:string, after?:string): Promise<INft[]> {
   const request: GraphQLRequest = {
     query: `
     query Wallet($address: String, $after: String) {
@@ -130,7 +128,7 @@ async function loadWalletContents(address:string, after?:string): Promise<NFT[]>
     }
   }
 
-  const items = new Array<NFT>()
+  const items = new Array<INft>()
 
   const data = await queryApi(request)
   
@@ -156,7 +154,6 @@ async function loadWalletContents(address:string, after?:string): Promise<NFT[]>
 
   if (data.wallet.tokens.pageInfo.hasNextPage) {
     const cursor = data.wallet.tokens.edges[data.wallet.tokens.edges.length - 1].cursor;
-    await new Promise(r => setTimeout(r, 300));
     items.concat(await loadWalletContents(address, cursor))
   }
 

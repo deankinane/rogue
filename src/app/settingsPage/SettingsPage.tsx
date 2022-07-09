@@ -1,6 +1,7 @@
-import React, { FormEvent, useContext, useState } from 'react'
+import React, { FormEvent, useContext, useEffect, useState } from 'react'
 import { Row, Col, Button, InputGroup, Form } from 'react-bootstrap'
 import { GearFill, Save } from 'react-bootstrap-icons';
+import { defaultSettings } from '../../application-state/settingsContext/ISettingsState';
 import { SettingsContext } from '../../application-state/settingsContext/SettingsContext';
 import useToast from '../../hooks/useToast';
 import './SettingsPage.css';
@@ -8,7 +9,11 @@ import './SettingsPage.css';
 function SettingsPage() {
   const sendToast = useToast()
   const {settings, updateSettings} = useContext(SettingsContext)
-  const [updatedSettings, setUpdatedSettings] = useState(settings)
+  const [updatedSettings, setUpdatedSettings] = useState(defaultSettings)
+
+  useEffect(() => {
+    setUpdatedSettings(s => (settings))
+  },[settings])
   
   function onNodeUrlChanged(url:string) {
     setUpdatedSettings(s => {
@@ -19,9 +24,7 @@ function SettingsPage() {
 
   function onFormSubmit(e: FormEvent) {
     e.preventDefault();
-    
     updateSettings(updatedSettings)
-
     sendToast('Settings Updated', 'Your changes have been saved.', 'success');
   }
 
@@ -42,7 +45,7 @@ function SettingsPage() {
             <InputGroup.Text>
               RPC Node
             </InputGroup.Text>
-            <Form.Control value={updatedSettings.node.rpcUrl} onChange={v => onNodeUrlChanged(v.currentTarget.value)} required/>
+            <Form.Control defaultValue={updatedSettings.node.rpcUrl}  onChange={v => onNodeUrlChanged(v.currentTarget.value)} required/>
           </InputGroup>
         </Col>
       </Row>

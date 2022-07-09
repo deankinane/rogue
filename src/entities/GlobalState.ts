@@ -1,6 +1,6 @@
 import { FunctionFragment } from "ethers/lib/utils";
+import { IWalletRecord } from "../application-state/walletContext/WalletContext";
 import { ParamTypes } from "./constants";
-import IWalletRecord from "./IWalletRecord";
 
 export interface CustomParam {
   name: string

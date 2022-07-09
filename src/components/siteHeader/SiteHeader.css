@@ -5,10 +5,13 @@
 }
 
 .header {
-  margin: 0 auto;
   background-color: #ffffff0f;
-  height: 100%;
   border-right: 1px solid #6741af6b;
+  width: 430px;
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
 }
 
 .header__logo {

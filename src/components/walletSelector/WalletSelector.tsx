@@ -1,16 +1,15 @@
 import React, { ChangeEvent, useContext, useEffect, useRef } from 'react'
-import { Col, Form, Row } from 'react-bootstrap';
-import { WalletContext } from '../../application-state/walletContext/WalletContext';
-import IWalletRecord from '../../entities/IWalletRecord'
-import './WalletSelector.css'
+import { Col, Row } from 'react-bootstrap';
+import { IWalletRecord, WalletContext } from '../../application-state/walletContext/WalletContext';
 import WalletSwitch from './walletSwitch/WalletSwitch';
+import './WalletSelector.css'
 
 export interface WalletSelectorProps {
   onWalletSelectionChanged: (selectedWallets: IWalletRecord[]) => void
 }
 
 function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
-  const {wallets, updateWalletBalances} = useContext(WalletContext)
+  const {wallets} = useContext(WalletContext)
   const selectedWallets = useRef(new Array<IWalletRecord>())
   const loaded = useRef(false);
 
@@ -20,7 +19,6 @@ function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
     if(wallets.length > 0 && selectedWallets.current.length === 0) {
       selectedWallets.current.push(wallets[0]);
       onWalletSelectionChanged(selectedWallets.current)
-      updateWalletBalances()
       loaded.current = true;
     }
   }, [wallets])

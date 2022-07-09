@@ -30,14 +30,11 @@ function App() {
     {
       user.connected && user.licenced
       ? <SettingsContextProvider>    
-          <Row className='h-100 g-0'>
-            <Col xs={2} className='h-100'>
-              <SiteHeader />
-            </Col>
-            <Col xs={10} className='h-100'>
-              <MintForm />
-            </Col>
-          </Row>
+          <div className='d=flex'>
+            <SiteHeader />
+            <MintForm />
+          </div>
+          
         </SettingsContextProvider>
       : <HomePage />
     }

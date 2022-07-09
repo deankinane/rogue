@@ -1,13 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { ArchiveFill, EyeSlashFill } from 'react-bootstrap-icons'
-import { WalletContext } from '../../../application-state/walletContext/WalletContext'
-import { NFT } from '../../../entities/IWalletRecord'
+import { INft, WalletContext } from '../../../application-state/walletContext/WalletContext'
 import ConfirmationDialog from '../../confrimationDialog/ConfirmationDialog'
 import './WalletItem.css'
 
 export interface WalletItemProps {
-  nft: NFT
+  nft: INft
 }
 
 function WalletItem({nft}:WalletItemProps) {

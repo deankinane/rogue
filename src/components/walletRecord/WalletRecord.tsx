@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, ButtonGroup, Col, Row } from 'react-bootstrap'
 import { BoxArrowUpRight, Clipboard, XSquare } from 'react-bootstrap-icons'
-import IWalletRecord from '../../entities/IWalletRecord'
+import { IWalletRecord } from '../../application-state/walletContext/WalletContext'
 import './WalletRecord.css'
 
 export interface WalletRecordProps {
