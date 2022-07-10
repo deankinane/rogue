@@ -1,12 +1,16 @@
 import React, { useContext, useEffect, useState } from 'react';
 import MintForm from './app/mintPage/MintPage';
-import SiteHeader from './components/siteHeader/SiteHeader';
-import { Col, Row, Toast, ToastContainer } from 'react-bootstrap';
+import LeftPanel from './app/leftPanel/LeftPanel';
+import { Toast, ToastContainer } from 'react-bootstrap';
 import './App.css';
 import { AlertMessage } from './hooks/useToast';
 import SettingsContextProvider from './application-state/settingsContext/SettingsContextProvider';
 import { UserContext } from './application-state/userContext/UserContext';
 import HomePage from './app/homePage/HomePage';
+import RightPanel from './app/rightPanel/RightPanel';
+import WalletContextProvider from './application-state/walletContext/WalletContextProvider';
+import TaskContextProvider from './application-state/taskContext/TaskContextProvider';
+import TaskRunner from './components/taskRunner/TaskRunner';
 
 function App() {
   const [toast, setToast] = useState<AlertMessage>();
@@ -29,13 +33,20 @@ function App() {
     <>
     {
       user.connected && user.licenced
-      ? <SettingsContextProvider>    
-          <div className='d=flex'>
-            <SiteHeader />
-            <MintForm />
-          </div>
-          
-        </SettingsContextProvider>
+      ? <>
+          <SettingsContextProvider>    
+            <WalletContextProvider>
+              <TaskContextProvider>
+                <div className='d-flex h-100'>
+                  <LeftPanel />
+                  <MintForm />
+                  <RightPanel />
+                </div>
+                <TaskRunner />
+              </TaskContextProvider>
+            </WalletContextProvider>
+          </SettingsContextProvider>
+        </>
       : <HomePage />
     }
      
@@ -50,6 +61,7 @@ function App() {
           : <></>
       }
       </ToastContainer>
+      
     </>
   );
 }

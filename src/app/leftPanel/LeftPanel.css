@@ -1,0 +1,21 @@
+.left-panel {
+  background-color: #ffffff0f;
+  border-right: 1px solid #6741af6b;
+  min-width: 430px;
+  max-width: 430px;
+  height: 100%;
+}
+
+.left-panel__logo {
+  color: #fff;  
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.left-panel__logo img {
+  height: 1.5em;
+  margin-top: 0.5em;
+}
+

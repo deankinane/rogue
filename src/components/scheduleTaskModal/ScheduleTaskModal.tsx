@@ -1,13 +1,14 @@
-import React, { PropsWithChildren, useState } from 'react'
+import React, { PropsWithChildren, useContext, useEffect, useState } from 'react'
 import { Modal, Row, Col, Button } from 'react-bootstrap'
 import { Bullseye, ClockFill, Speedometer2 } from 'react-bootstrap-icons';
+import { TriggerType, IFlipstateTriggerSettings, TaskContext, ITask, TaskStatus, defaultTask } from '../../application-state/taskContext/TaskContext';
 import { TransactionState } from '../../entities/GlobalState'
 import MintContract from '../../entities/MintContract';
-import { BackrunTriggerSettings, TriggerType } from '../../entities/ScheduledTasks';
-import BackrunTriggerForm from './backrunTrigger/BackrunTriggerForm';
-import './ScheduleTaskModal.css';
+import useToast from '../../hooks/useToast';
+import FlipstateTriggerForm from './flipstateTrigger/FlipstateTriggerForm';
 import TargetValueForm from './targetValue/TargetValueForm';
 import TimeTriggerForm from './timeTrigger/TimeTriggerForm';
+import './ScheduleTaskModal.css';
 
 export interface ScheduleTaskModalProps extends PropsWithChildren<any> {
   show: boolean
@@ -17,7 +18,23 @@ export interface ScheduleTaskModalProps extends PropsWithChildren<any> {
 }
 
 function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleTaskModalProps) {
+  const {addTask} = useContext(TaskContext)
   const [triggerType, setTriggerType] = useState<TriggerType>()
+  const [task, setTask] = useState<ITask>(defaultTask)
+  const sendToast = useToast()
+
+  useEffect(() => {
+    if (!contract) return
+    
+    setTask(s => (
+      {
+      ...s,
+      contract: contract,
+      transactionSettings: transactionState,
+      status: TaskStatus.waiting
+      }
+    ))
+  },[contract, transactionState])
 
   function closeModal() {
     onHide();
@@ -27,8 +44,21 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
     return type === triggerType ? ' active' : '';
   }
 
-  function onSettingsUpdate(settings: BackrunTriggerSettings){
-    
+  function onSetTriggerType(type: TriggerType) {
+    setTriggerType(type)
+    setTask(s =>({...s, type: type}))
+  }
+
+  function onSettingsUpdate(settings: IFlipstateTriggerSettings){
+    setTask(s => ({...s, settings: settings}))
+  }
+
+  function onScheduleTaskClicked() {
+    if (task.settings) {
+      addTask(task)
+      closeModal()
+      sendToast('Task Scheduled', `${task.type} task schedule for ${task.contract?.contractName}`, 'success')
+    }
   }
   
   return (
@@ -48,13 +78,13 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
         <div className='d-flex align-items-stretch'>  
           <Row className='g-2 mt-2'>
             <Col xs={12} xl={4}>
-              <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.backrun)} onClick={() => setTriggerType(TriggerType.backrun)}>
-                <div className='task-trigger-type-button_title mb-2'><Speedometer2 className='me-3' size='20'/><span>Backrun Function</span></div>
-                <p>Monitor the contract for a function call and attempt to queue transactions immediately afterwards in the same block.</p>
+              <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.flipstate)} onClick={() => onSetTriggerType(TriggerType.flipstate)}>
+                <div className='task-trigger-type-button_title mb-2'><Speedometer2 className='me-3' size='20'/><span>Flipstate</span></div>
+                <p>Monitor the contract for a function call that enables the mint and attempt to queue transactions immediately afterwards in the same block.</p>
               </div>
             </Col>
             <Col xs={12} xl={4}>
-              <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.value)} onClick={() => setTriggerType(TriggerType.value)}>
+              <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.value)} onClick={() => onSetTriggerType(TriggerType.value)}>
                 <div className='task-trigger-type-button_title mb-2'><Bullseye className='me-3' size='20'/><span>Target Value</span></div>
                 <p>Monitor a value on the contract and submit transactions when the a target value
                   is reached.
@@ -62,7 +92,7 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
               </div>
             </Col>
             <Col xs={12} xl={4}>
-              <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.time)} onClick={() => setTriggerType(TriggerType.time)}>
+              <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.time)} onClick={() => onSetTriggerType(TriggerType.time)}>
                 <div className='task-trigger-type-button_title mb-2'><ClockFill className='me-3' size='20'/><span>Time Trigger</span></div>
                 <p>Submit transactions at a certain date and time.
                 </p>
@@ -72,8 +102,8 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
         </div>
         <div className="modal-section mt-3">
           {
-            triggerType === TriggerType.backrun ?
-            <BackrunTriggerForm contract={contract} onSettingsUpdate={onSettingsUpdate} />
+            triggerType === TriggerType.flipstate ?
+            <FlipstateTriggerForm contract={contract} onSettingsUpdate={onSettingsUpdate} />
             : <></>
           }
           {
@@ -91,7 +121,7 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
       </Modal.Body>
       <Modal.Footer>
         <Button variant='dark' className='float-end' onClick={closeModal}>Cancel</Button>
-        <Button variant='info' className='float-end' onClick={closeModal}>Schedule Task</Button>
+        <Button variant='info' className='float-end' onClick={onScheduleTaskClicked}>Schedule Task</Button>
       </Modal.Footer>
     </Modal>
   )

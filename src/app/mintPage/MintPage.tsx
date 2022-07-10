@@ -4,12 +4,12 @@ import ContractSearchBar from "../../components/contractSearchBar/ContractSearch
 import FunctionSelector from "../../components/functionSelector/FunctionSelector";
 import ViewableFunctionDetail from "../../components/viewableFunctionDetail/ViewableFunctionDetail"; 
 import CodeBlock from "../../components/codeBlock/CodeBlock";
-import { Button, Card, Col, Form, InputGroup, Nav, Row, Spinner, Tab } from "react-bootstrap";
+import { Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
 import GasWidget from "../../components/gasWidget/GasWidget";
 import { CustomParam, defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
 import { FunctionFragment } from "ethers/lib/utils";
 import WalletSelector from "../../components/walletSelector/WalletSelector";
-import { Calendar2DateFill, CollectionFill, GearFill, Triangle, WalletFill } from "react-bootstrap-icons";
+import { Triangle } from "react-bootstrap-icons";
 import { PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
 import MintStatusModal from "../../components/mintStatusModal/MintStatusModal";
 import { BigNumber, ethers } from "ethers";
@@ -18,12 +18,8 @@ import useToast from "../../hooks/useToast";
 import ScheduleTaskModal from "../../components/scheduleTaskModal/ScheduleTaskModal";
 import { isBrowser } from 'react-device-detect';
 import CustomFunctionParam from "../../components/customFunctionParam/CustomFunctionParam";
-import WalletManager from "../walletManager/WalletManager";
-import SettingsPage from "../settingsPage/SettingsPage";
-import WalletContextProvider from "../../application-state/walletContext/WalletContextProvider";
 import { SettingsContext } from "../../application-state/settingsContext/SettingsContext";
 import { IWalletRecord } from "../../application-state/walletContext/WalletContext";
-import CollectionManager from "../collectionManager/CollectionManager";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
@@ -210,7 +206,7 @@ export default function MintPage() {
     <>
     <Row className='main-content-area'>
       {/* MAIN COLUMN START */}
-      <Col xs={12} xl={8} className='d-flex flex-column h-100 p-4'>
+      <Col xs={12} className='d-flex flex-column h-100 p-4'>
         <Row className='mb-4 mt-1'>
           <Col>
           {contract && contract.contractLogo ? <img className='contract-logo' src={contract.contractLogo} alt={`${contract.contractName} Logo`}/> : <Triangle className='contract-logo me-3' />}
@@ -219,7 +215,7 @@ export default function MintPage() {
           </Col>
         </Row>
         <Row className="d-flex align-items-stretch mb-3 g-3">
-        <Col xs={12} lg={4}>
+        <Col xs={12} className='col-hd-6 col-2k-4'>
           <Card  className="h-100">
             <Card.Body>
               <div>
@@ -240,7 +236,7 @@ export default function MintPage() {
           </Card>
           
           </Col>
-          <Col xs={12} lg={4}>
+          <Col xs={12} className='col-hd-6 col-2k-4'>
             <Card className="h-100">
               <Card.Body>
                 <p className="mb-0">Set Transaction Parameters</p>
@@ -288,14 +284,12 @@ export default function MintPage() {
               </Card.Body>
             </Card>
           </Col>
-          <Col xs={12} lg={4}>
+          <Col xs={12} className='col-2k-4'>
             <Card className="h-100">
               <Card.Body className="d-flex flex-column">
                 <div>              
                   <p>Select Wallets</p>
-                  <WalletContextProvider>
-                    <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged}/>     
-                  </WalletContextProvider>
+                  <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged}/>     
                 </div>
                 <p className="mt-3">Mint Summary</p>
                 <InputGroup className="justify-content-end">
@@ -350,42 +344,6 @@ export default function MintPage() {
         }
       </Col>
       {/* MAIN END START */}
-      <Col xs={12} xl={4} className="h-100 dark-panel">
-        <Tab.Container defaultActiveKey="wallets">
-          <Nav variant="pills">
-            <Nav.Item>
-              <Nav.Link eventKey="wallets"><WalletFill /> Wallets</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="collections"><CollectionFill /> Collections</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="tasks"><Calendar2DateFill /> Tasks</Nav.Link>
-            </Nav.Item>
-            <Nav.Item className="float-end">
-              <Nav.Link eventKey="settings"><GearFill /> Settings</Nav.Link>
-            </Nav.Item>
-          </Nav>
-          <Tab.Content>
-            <Tab.Pane eventKey="wallets">
-              <WalletContextProvider>
-                <WalletManager />
-              </WalletContextProvider>
-            </Tab.Pane>
-            <Tab.Pane eventKey="collections">
-              <WalletContextProvider>
-                <CollectionManager />
-              </WalletContextProvider>
-            </Tab.Pane>
-            <Tab.Pane eventKey="tasks">
-              
-            </Tab.Pane>
-            <Tab.Pane eventKey="settings">
-              <SettingsPage />
-            </Tab.Pane>
-          </Tab.Content>
-        </Tab.Container>
-      </Col>
     </Row>
     <MintStatusModal 
       show={showMintStatusModal}
@@ -394,12 +352,13 @@ export default function MintPage() {
       transactionState={sentTransactionSettings}
       onHide={() => {setShowMintStatusModal(false)}}
     />
-    <ScheduleTaskModal 
-      show={showScheduleTaskModal}
-      transactionState={sentTransactionSettings}
-      onHide={() => {setScheduleTaskModal(false)}}
-      contract={contract}
-    />
+   <ScheduleTaskModal 
+        show={showScheduleTaskModal}
+        transactionState={sentTransactionSettings}
+        onHide={() => {setScheduleTaskModal(false)}}
+        contract={contract}
+      />
+    
     
     </>
   )

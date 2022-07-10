@@ -1,0 +1,20 @@
+.right-panel {
+  background-color: #0f0720;
+  border-left: 1px solid #4b396c6b;
+  box-shadow: -5px 7px 15px 0 rgb(0 0 0 / 45%);
+  min-width: 700px;
+  max-width: 700px;
+  height: 100%;
+}
+
+.right-panel__section-header {
+  border-bottom: 1px solid #4b396c6b;
+  align-items: baseline;
+}
+
+@media only screen and (max-width: 2460px) {
+  .right-panel {
+    max-width: 560px;
+    min-width: 560px;
+  }
+}

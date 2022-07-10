@@ -5,7 +5,8 @@ import ISettingState, { defaultSettings, ISettings } from './ISettingsState';
 import { SettingsContext } from './SettingsContext';
 
 function SettingsContextProvider({children}:IPropsChildren) {
-  const ROGUE_STORAGE_SETTINGS = 'ROGUE_STORAGE_SETTINGS';
+  // const ROGUE_STORAGE_SETTINGS = 'ROGUE_STORAGE_SETTINGS';
+  const ROGUE_STORAGE_SETTINGS = 'ROGUE_STORAGE_SETTINGS_TESTNET';
   const [storedSettings, setStoredSettings] = useLocalStorage<ISettings>(ROGUE_STORAGE_SETTINGS, defaultSettings);
   const [settings, setSettings] = useState<ISettings>(defaultSettings)
 

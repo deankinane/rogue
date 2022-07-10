@@ -38,7 +38,7 @@ function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
     <div>      
       <Row className='g-2'>
         {wallets.map((w, i) => (
-          <Col key={i} xs={12} xl={6} >
+          <Col key={i} xs={12} xl={6} className='col-hd-3 col-2k-6'>
             <WalletSwitch 
               defaultState={i===0} 
               wallet={w} 

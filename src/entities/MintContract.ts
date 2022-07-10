@@ -10,6 +10,7 @@ class MintContract {
   contractSlug: string = "";
   contractLogo: string = "";
   abi: Interface | null = null;
+  abiJson: any = {}
   payables: FunctionFragment[];
   writables: FunctionFragment[];
   viewables: FunctionFragment[];
@@ -48,8 +49,8 @@ class MintContract {
     } catch (error) {
       this.contractSource = data.SourceCode;
     }
-
-    this.abi = new Interface(JSON.parse(data.ABI));
+    this.abiJson = JSON.parse(data.ABI)
+    this.abi = new Interface(this.abiJson)
 
     // Find the payable and writable functions in the contract
     this.abi.fragments.forEach(f => {

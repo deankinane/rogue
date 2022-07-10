@@ -1,19 +1,20 @@
 import { FunctionFragment } from 'ethers/lib/utils'
 import React from 'react'
 import { Col, Row } from 'react-bootstrap'
+import { IFlipstateTriggerSettings } from '../../../application-state/taskContext/TaskContext'
 import MintContract from '../../../entities/MintContract'
-import { BackrunTriggerSettings } from '../../../entities/ScheduledTasks'
+import { getFunctionNameHex } from '../../../entities/utilityFunctions'
 import FunctionSelector from '../../functionSelector/FunctionSelector'
 
-export interface BackrunTriggerFormProps {
+export interface FlipstateTriggerFormProps {
   contract?: MintContract
-  onSettingsUpdate: (settings:BackrunTriggerSettings) => void
+  onSettingsUpdate: (settings:IFlipstateTriggerSettings) => void
 }
-function BackrunTriggerForm({contract, onSettingsUpdate}:BackrunTriggerFormProps) {
-
+function BackrunTriggerForm({contract, onSettingsUpdate}:FlipstateTriggerFormProps) {
+  
   function onFunctionSelected(f:FunctionFragment) {
     onSettingsUpdate({
-      triggerFunction: f
+      triggerFunction: getFunctionNameHex(f.name)
     })
   }
 

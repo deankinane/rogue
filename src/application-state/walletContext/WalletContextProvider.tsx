@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import IPropsChildren from '../../common/IPropsChildren';
 import { loadWalletContents } from '../../entities/IcyApi';
 import { getWalletBalance } from '../../entities/ProviderFunctions';
@@ -17,9 +17,10 @@ function WalletContextProvider({children}:IPropsChildren) {
   const [collections, setCollections] = useState<ICollectionView[]>(storedCollections)
 
   function addWallet(wallet: IWalletRecord) {
-    storedWallets.push(wallet)
-    setStoredWallets(storedWallets)
-    setWallets(storedWallets)
+    const updated = [...storedWallets]
+    updated.push(wallet)
+    setStoredWallets(updated)
+    setWallets(updated)
     updateWalletContents()
   }
 
@@ -33,14 +34,24 @@ function WalletContextProvider({children}:IPropsChildren) {
     })
     setStoredWallets(storedWallets)
     setWallets(storedWallets)
+    updateCollections(storedWallets)
   }
 
   async function updateWalletContents() {
-    const collections = new Array<ICollectionView>()
+    const updated = [...storedWallets]
+    for(let i=0; i<updated.length; i++) {
+      updated[i].contents = await loadWalletContents(updated[i].publicKey);
+    }
 
-    for(let i=0; i<storedWallets.length; i++) {
-      storedWallets[i].contents = await loadWalletContents(storedWallets[i].publicKey);
-      storedWallets[i].contents.forEach(nft => {
+    setStoredWallets(updated)
+    setWallets(ws => (updated))
+    updateCollections(updated)
+  }
+
+  function updateCollections(wallets: IWalletRecord[]) {
+    const collections = new Array<ICollectionView>()
+    wallets.forEach(w => {
+      w.contents.forEach(nft => {
         nft.collection.hidden = hiddenCollections.findIndex(c => nft.collection.address === c) > -1
         const idx = collections.findIndex(c => c.collection.address === nft.collection.address)
         if (idx < 0) {
@@ -55,8 +66,8 @@ function WalletContextProvider({children}:IPropsChildren) {
           collections[idx].tokens.push(nft)
         }
       });
-    }
-
+    });
+    
     collections.sort((x,y) => {
       const textA = x.collection.name.toUpperCase();
       const textB = y.collection.name.toUpperCase();
@@ -65,24 +76,21 @@ function WalletContextProvider({children}:IPropsChildren) {
 
     setStoredCollections(collections)
     setCollections(cs => (collections))
-    setStoredWallets(storedWallets)
-    setWallets(ws => (storedWallets))
   }
-
   async function updateWalletBalances() {
-    
-    for(let i=0; i<storedWallets.length; i++) {
-      storedWallets[i].balance = await getWalletBalance(wallets[i].publicKey);      
+    const updated = [...storedWallets]
+    for(let i=0; i<updated.length; i++) {
+      updated[i].balance = await getWalletBalance(updated[i].publicKey);      
     }
     
-    setStoredWallets(storedWallets)
-    setWallets(ws => (storedWallets))
+    setStoredWallets(updated)
+    setWallets(ws => (updated))
   }
 
 
   const walletState: IWalletState = {
-    wallets: wallets || [],
-    collections: collections || [],
+    wallets: wallets,
+    collections: collections,
     addWallet: addWallet,
     hideCollection: hideCollection,
     updateWalletContents: updateWalletContents,

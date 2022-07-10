@@ -26,14 +26,18 @@ async function loadCollectionDetails(address:string): Promise<ICollectionDetails
   }
 
   const data = await queryApi(request);
-
-  return {
-    address: data.contract.address,
-    name: data.contract.name,
-    slug: data.contract.unsafeOpenseaSlug,
-    logo: data.contract.unsafeOpenseaImageUrl,
-    hidden: false
+  
+  if (data.contract) {
+    return {
+      address: data.contract.address,
+      name: data.contract.name,
+      slug: data.contract.unsafeOpenseaSlug,
+      logo: data.contract.unsafeOpenseaImageUrl,
+      hidden: false
+    }
   }
+
+  return null;
 }
 
 async function loadTrendingMints(): Promise<any> {

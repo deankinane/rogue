@@ -38,7 +38,7 @@ function WalletManager() {
 
   return (
     <div className='p-1'>
-      <div className="d-flex pb-4 mb-4 dark-panel-section-header">
+      <div className="d-flex pb-4 mb-4 right-panel__section-header">
         <h5 className='fw-bold flex-grow-1'><WalletFill className='me-3'/>Manage Wallets</h5>
         <Button 
           variant='info' 

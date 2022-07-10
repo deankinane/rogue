@@ -2,17 +2,17 @@ import { useEffect } from 'react';
 import { Tab, Nav } from 'react-bootstrap';
 import { GraphUpArrow, Triangle, FileBinary } from 'react-bootstrap-icons';
 import { loadTrendingMints } from '../../entities/IcyApi';
-import WalletConnectionWidget from '../walletConnectionWidget/WalletConnectionWidget';
-import './SiteHeader.css';
+import WalletConnectionWidget from '../../components/walletConnectionWidget/WalletConnectionWidget';
+import './LeftPanel.css';
 
-export default function SiteHeader() {
+export default function LeftPanel() {
 
   useEffect(() => {
     // loadTrendingMints()
   },[])
   return (
-    <div className='header'>
-      <div className="header__logo">
+    <div className='left-panel'>
+      <div className="left-panel__logo">
         <img src="./img/rogue_logo.svg" alt="ROGUE Logo - Mint NFTs Fast" />
         <div className="flex-grow-1 justify-content-end">
           <WalletConnectionWidget />
