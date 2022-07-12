@@ -1,10 +1,10 @@
 
 import { FunctionFragment } from "ethers/lib/utils"
 import { node } from "prop-types";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 import { ArrowClockwise, Stack } from "react-bootstrap-icons";
-import { SettingsContext } from "../../application-state/settingsContext/SettingsContext";
+import { useSettingsStore } from "../../application-state/settingsStore/SettingsStore";
 import MintContract from "../../entities/MintContract";
 import { getReadValue } from "../../entities/ProviderFunctions";
 import './ViewableFunctionDetail.css';
@@ -28,7 +28,7 @@ export default function ViewableFunctionDetail({
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState('');
   const [oldValue, setOldValue] = useState(false);
-  const {settings} = useContext(SettingsContext)
+  const {settings} = useSettingsStore()
   const intial = useRef('');
 
   useEffect(() => {
@@ -70,15 +70,6 @@ export default function ViewableFunctionDetail({
     return nameNormalised.indexOf('MAX') > -1 && nameNormalised.indexOf('SUPPLY') > -1;
   }
 
-  
-  function getTooltip(message: string) {
-    return (
-      <Tooltip >
-          {message}
-      </Tooltip>
-    )
-  }
-
   return (
     <div className="function-card">
       <div className="d-flex">
@@ -86,20 +77,20 @@ export default function ViewableFunctionDetail({
         <p className="text-secondary pl-3 flex-grow-1 text-end">{type}</p>
       </div>
      <div className="d-flex align-items-center">
-      <OverlayTrigger placement="bottom" overlay={getTooltip('Refresh')}>
-        <Button size="sm" variant="info" className="text-bold" onClick={loadValue} disabled={loading}>{loading ? <Spinner size="sm" animation="border" /> : <ArrowClockwise />}</Button>
-      </OverlayTrigger>
+      <Button 
+        size="sm" 
+        variant="info" 
+        className="text-bold" 
+        onClick={loadValue} 
+        title='Refresh'
+        disabled={loading}>{loading ? <Spinner size="sm" animation="border" /> : <ArrowClockwise />}</Button>
         
         {type.startsWith('uint') ? (
           <>
-            <OverlayTrigger placement="bottom" overlay={getTooltip('Set Cost per Mint')}>
-              <Button size="sm" variant='info' className='ms-2' onClick={() => onSetUnitPriceClicked(value)}>
-                <img src='img/eth-logo.svg' alt='Ethereum logo' style={{'width':'1em'}} />
-              </Button>
-            </OverlayTrigger>
-            <OverlayTrigger placement="bottom" overlay={getTooltip('Set Units per Txn')}>
-              <Button size="sm" variant='info' className='ms-2' onClick={() => onSetUnitsPerTxnClicked(value)}><Stack/></Button>
-            </OverlayTrigger>
+            <Button size="sm" title='Set Cost per Mint' variant='info' className='ms-2' onClick={() => onSetUnitPriceClicked(value)}>
+              <img src='img/eth-logo.svg' alt='Ethereum logo' style={{'width':'1em'}} />
+            </Button>
+            <Button size="sm" title='Set Units per Txn' variant='info' className='ms-2' onClick={() => onSetUnitsPerTxnClicked(value)}><Stack/></Button>
           </>
         ):<></>}
        <p className={`function-card__value ${oldValue ? 'function-card__value--old' : ''}`}>{value}</p>

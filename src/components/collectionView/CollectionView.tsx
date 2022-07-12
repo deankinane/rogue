@@ -1,19 +1,15 @@
-import React, { useRef, useState } from 'react'
+import React, {  useState } from 'react'
 import { Button, Row } from 'react-bootstrap'
 import { CaretDownFill, CaretUpFill } from 'react-bootstrap-icons'
-import { ICollectionView } from '../../application-state/walletContext/WalletContext'
+import { ICollectionView } from '../../application-state/walletStore/WalletInterface'
 import WalletItem from '../walletContents/walletItem/WalletItem'
 import './CollectionView.css'
 
 export interface CollectionViewProps {
   collectionView: ICollectionView
-  toggleKey: string
 }
-function CollectionView({collectionView, toggleKey}: CollectionViewProps) {
+function CollectionView({collectionView}: CollectionViewProps) {
   const [collapsed, setCollapsed] = useState(true)
-
-  const contents = useRef<HTMLDivElement>(null)
-  
 
   return (
     collectionView.collection.hidden
@@ -35,7 +31,7 @@ function CollectionView({collectionView, toggleKey}: CollectionViewProps) {
           className='m-3'
           onClick={() => setCollapsed(x => (!x))}>{collapsed ? <CaretDownFill />: <CaretUpFill />}</Button>
       </div>
-      <div className={`collection-view__collapse mb-3 ${collapsed ? '' : 'expanded'}`} ref={contents}>
+      <div className={`collection-view__collapse mb-3 ${collapsed ? '' : 'expanded'}`}>
         <Row className='g-3'>
           {
             collectionView.tokens.map((x,i) => <WalletItem key={i} nft={x} />)

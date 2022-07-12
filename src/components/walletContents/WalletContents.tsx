@@ -2,10 +2,10 @@ import React, { } from 'react'
 import { Row } from 'react-bootstrap'
 import WalletItem from './walletItem/WalletItem'
 import './WalletContents.css'
-import { IWalletRecord } from '../../application-state/walletContext/WalletContext'
+import { IWallet } from '../../application-state/walletStore/WalletInterface'
 
 export interface WalletContentsProps {
-  wallet : IWalletRecord
+  wallet : IWallet
 }
 
 function WalletContents({wallet}: WalletContentsProps) {  

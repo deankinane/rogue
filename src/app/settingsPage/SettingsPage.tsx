@@ -1,14 +1,14 @@
-import React, { FormEvent, useContext, useEffect, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import { Row, Col, Button, InputGroup, Form } from 'react-bootstrap'
 import { GearFill, Save } from 'react-bootstrap-icons';
-import { defaultSettings } from '../../application-state/settingsContext/ISettingsState';
-import { SettingsContext } from '../../application-state/settingsContext/SettingsContext';
+import { defaultSettings } from '../../application-state/settingsStore/ISettingsState';
+import { useSettingsStore } from '../../application-state/settingsStore/SettingsStore';
 import useToast from '../../hooks/useToast';
 import './SettingsPage.css';
 
 function SettingsPage() {
   const sendToast = useToast()
-  const {settings, updateSettings} = useContext(SettingsContext)
+  const {settings, updateSettings} = useSettingsStore()
   const [updatedSettings, setUpdatedSettings] = useState(defaultSettings)
 
   useEffect(() => {

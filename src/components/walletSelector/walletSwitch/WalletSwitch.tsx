@@ -1,11 +1,11 @@
 import React, { ChangeEvent } from 'react'
 import { Form } from 'react-bootstrap'
-import { IWalletRecord } from '../../../application-state/walletContext/WalletContext'
+import { IWallet } from '../../../application-state/walletStore/WalletInterface'
 
 export interface WalletSwitchProps {
-  wallet: IWalletRecord
+  wallet: IWallet
   defaultState: boolean
-  onCheckStateChanged: (e: ChangeEvent<HTMLInputElement>, w: IWalletRecord) => void
+  onCheckStateChanged: (e: ChangeEvent<HTMLInputElement>, w: IWallet) => void
 }
 
 function WalletSwitch({wallet, defaultState, onCheckStateChanged}:WalletSwitchProps) {

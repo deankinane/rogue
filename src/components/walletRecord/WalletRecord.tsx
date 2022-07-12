@@ -1,12 +1,12 @@
 import React from 'react'
 import { Button, ButtonGroup, Col, Row } from 'react-bootstrap'
 import { BoxArrowUpRight, Clipboard, XSquare } from 'react-bootstrap-icons'
-import { IWalletRecord } from '../../application-state/walletContext/WalletContext'
+import { IWallet } from '../../application-state/walletStore/WalletInterface'
 import './WalletRecord.css'
 
 export interface WalletRecordProps {
-  wallet: IWalletRecord,
-  onDeleteWallet: (wallet: IWalletRecord) => void
+  wallet: IWallet,
+  onDeleteWallet: (wallet: IWallet) => void
 }
 
 function WalletRecord({wallet, onDeleteWallet}:WalletRecordProps) {

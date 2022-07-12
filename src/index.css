@@ -428,6 +428,13 @@ input {
 .main-content-area {
   height: 100%;
   margin: 0;
+  max-width: calc(100% - 700px - 430px);
+}
+
+@media only screen and (max-width: 2460px) {
+  .main-content-area {
+    max-width: calc(100% - 560px - 430px);
+  }
 }
 
 @media (min-width: 1900px) {

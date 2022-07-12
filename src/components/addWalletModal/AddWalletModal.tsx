@@ -3,15 +3,16 @@ import React, { FormEvent, useContext, useState } from 'react'
 import { Button, Form, Modal, ModalProps, Spinner } from 'react-bootstrap'
 import { getWalletBalance } from '../../entities/ProviderFunctions';
 import SimpleCrypto from 'simple-crypto-js';
-import { IWalletRecord, WalletContext } from '../../application-state/walletContext/WalletContext';
 import { UserContext } from '../../application-state/userContext/UserContext';
+import { useWalletStore } from '../../application-state/walletStore/WalletStore';
+import { IWallet } from '../../application-state/walletStore/WalletInterface';
 
 interface AddWalletModalProps extends ModalProps {
-  callback: (wallet?: IWalletRecord ) => void
+  callback: (wallet?: IWallet ) => void
 }
 
 function AddWalletModal({callback, ...props}: AddWalletModalProps) {
-  const {wallets} = useContext(WalletContext)
+  const {wallets} = useWalletStore()
   const [walletName, setWalletName] = useState("");
   const [privateKey, setPrivateKey] = useState("");
   const [working, setWorking] = useState(false);
@@ -34,7 +35,7 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
     const simpleCrypto = new SimpleCrypto(user.address); 
     const encrypted = simpleCrypto.encrypt(privateKey);
 
-    const newWallet: IWalletRecord = {
+    const newWallet: IWallet = {
       name: walletName,
       privateKey: encrypted,
       publicKey: etherWallet.address,

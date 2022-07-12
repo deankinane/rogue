@@ -1,7 +1,5 @@
-import { FunctionFragment } from "ethers/lib/utils";
-import { createContext, useContext } from "react";
-import { defaultTransactionState, TransactionState } from "../../entities/GlobalState";
-import MintContract from "../../entities/MintContract";
+import { defaultTransactionState, TransactionState } from "../../entities/GlobalState"
+import MintContract from "../../entities/MintContract"
 
 export enum TriggerType {
   flipstate = 'Flipstate',
@@ -22,6 +20,7 @@ export interface IFlipstateTriggerSettings {
 }
 
 export interface ITask {
+  id: string
   contract: MintContract
   type: TriggerType
   settings: IFlipstateTriggerSettings
@@ -30,6 +29,7 @@ export interface ITask {
 }
 
 export const defaultTask: ITask = {
+  id: '',
   contract: new MintContract(''),
   type: TriggerType.flipstate,
   settings: {
@@ -42,15 +42,6 @@ export const defaultTask: ITask = {
 export interface ITaskState {
   tasks: ITask[]
   addTask: (task: ITask) => void
-  deleteTask: (taskIndex: number) => void
-  updateTask: (taskIndex: number, task: ITask) => void
+  deleteTask: (task: ITask) => void
+  updateTask: (task: ITask) => void
 }
-
-export const TaskContext = createContext<ITaskState>({
-  tasks: [],
-  addTask: (task: ITask) => {},
-  deleteTask: (taskIndex: number) => {},
-  updateTask: (taskIndex: number, task: ITask) => {}
-})
-
-export const useTaskContext = () => useContext(TaskContext)

@@ -14,12 +14,14 @@ class MintContract {
   payables: FunctionFragment[];
   writables: FunctionFragment[];
   viewables: FunctionFragment[];
+  mintcandidates: FunctionFragment[]
 
   constructor(address: string) {
     this.address = address;
     this.payables = new Array<FunctionFragment>();
     this.writables = new Array<FunctionFragment>();
     this.viewables = new Array<FunctionFragment>();
+    this.mintcandidates = new Array<FunctionFragment>();
   }
 
   async init() {
@@ -67,6 +69,8 @@ class MintContract {
         }
       }
     });
+
+    this.mintcandidates = this.payables.concat(this.writables)
 
     const details = await loadCollectionDetails(this.address)
     if (details !== null) {

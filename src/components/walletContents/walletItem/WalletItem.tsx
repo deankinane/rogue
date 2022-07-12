@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { ArchiveFill, EyeSlashFill } from 'react-bootstrap-icons'
-import { INft, WalletContext } from '../../../application-state/walletContext/WalletContext'
+import { INft } from '../../../application-state/walletStore/WalletInterface'
+import { useWalletStore } from '../../../application-state/walletStore/WalletStore'
 import ConfirmationDialog from '../../confrimationDialog/ConfirmationDialog'
 import './WalletItem.css'
 
@@ -10,7 +11,7 @@ export interface WalletItemProps {
 }
 
 function WalletItem({nft}:WalletItemProps) {
-  const {hideCollection} = useContext(WalletContext);
+  const {hideCollection} = useWalletStore()
 
   const [image, setImage] = useState('')
   const [hover, setHover] = useState(false)

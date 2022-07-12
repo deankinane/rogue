@@ -1,16 +1,17 @@
-import React, { ChangeEvent, useContext, useEffect, useRef } from 'react'
+import React, { ChangeEvent,  useEffect, useRef } from 'react'
 import { Col, Row } from 'react-bootstrap';
-import { IWalletRecord, WalletContext } from '../../application-state/walletContext/WalletContext';
 import WalletSwitch from './walletSwitch/WalletSwitch';
 import './WalletSelector.css'
+import { useWalletStore } from '../../application-state/walletStore/WalletStore';
+import { IWallet } from '../../application-state/walletStore/WalletInterface';
 
 export interface WalletSelectorProps {
-  onWalletSelectionChanged: (selectedWallets: IWalletRecord[]) => void
+  onWalletSelectionChanged: (selectedWallets: IWallet[]) => void
 }
 
 function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
-  const {wallets} = useContext(WalletContext)
-  const selectedWallets = useRef(new Array<IWalletRecord>())
+  const {wallets} = useWalletStore()
+  const selectedWallets = useRef(new Array<IWallet>())
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ function WalletSelector({onWalletSelectionChanged}:WalletSelectorProps) {
     }
   }, [wallets])
 
-  function onCheckStateChanged(e: ChangeEvent<HTMLInputElement>, w: IWalletRecord) {
+  function onCheckStateChanged(e: ChangeEvent<HTMLInputElement>, w: IWallet) {
     if (e.currentTarget.checked) {
       selectedWallets.current.push(w);
     }

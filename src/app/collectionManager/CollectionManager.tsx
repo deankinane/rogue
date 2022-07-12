@@ -1,10 +1,10 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { CollectionFill } from 'react-bootstrap-icons'
-import { WalletContext } from '../../application-state/walletContext/WalletContext'
+import { useWalletStore } from '../../application-state/walletStore/WalletStore'
 import CollectionView from '../../components/collectionView/CollectionView'
 
 function CollectionManager() {
-  const {collections} = useContext(WalletContext)
+  const {collections} = useWalletStore()
 
   return (
     <>
@@ -15,7 +15,7 @@ function CollectionManager() {
     </div>
     {
       collections.map((c,i) => (
-        <CollectionView collectionView={c} key={i} toggleKey={`col${i}`} />
+        <CollectionView collectionView={c} key={i} />
       ))
     }
     

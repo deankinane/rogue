@@ -1,12 +1,14 @@
 import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
-import { Contract, ethers } from "ethers";
+import { BigNumber, Contract, ethers } from "ethers";
 import SimpleCrypto from "simple-crypto-js";
 import { ParamTypes } from "./constants";
 import { CustomParam, TransactionState } from "./GlobalState";
-import {INodeRecord} from "../application-state/settingsContext/ISettingsState";
+import {INodeRecord} from "../application-state/settingsStore/ISettingsState";
 import MintContract from "./MintContract";
 import { ROGUE_SESSION_ADDRESS } from "../application-state/userContext/UserContextProvider";
-import { IWalletRecord } from "../application-state/walletContext/WalletContext";
+import { IWallet } from "../application-state/walletStore/WalletInterface"
+import { Interface } from "ethers/lib/utils";
+import { ITransaction, ITransactionGroup, TransactionStatus } from "../common/ITransaction";
 
 async function getReadValue(mintContract : MintContract, func:string, node: INodeRecord) : Promise<any> {
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
@@ -25,7 +27,7 @@ async function getWalletBalance(address:string) : Promise<string> {
 }
 
 export interface TransactionRequestGroup {
-  wallet: IWalletRecord,
+  wallet: IWallet,
   transactions: TransactionRequest[]
 }
 
@@ -42,18 +44,18 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
 
   const totalMintCost = ethers.utils.parseEther(`${settings.totalCost || 0}`);
   
-  
   const txnsPerWallet = settings.transactionsPerWallet || 1;
   const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
   const simpleCrypto = new SimpleCrypto(sig);
 
   for(let w=0; w<settings.selectedWallets.length; w++) {
     const params = new Array<any>();
+    const wallet = settings.selectedWallets[w]
 
     if(settings.customParams) {
       settings.mintFunction.inputs.forEach((x) => {
         const param = settings.functionParams.find(f => f.name === x.name);
-        params.push(getParamValue(param, settings.selectedWallets[w].publicKey));
+        params.push(getParamValue(param, wallet.publicKey));
       })
     }
     else if(settings.mintFunction.inputs.length === 1) {
@@ -63,10 +65,10 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
     const data = mintContract.abi.encodeFunctionData(settings.mintFunction, params);
 
     const transactions = new Array<TransactionRequest>();
-    const wallet = new ethers.Wallet(simpleCrypto.decrypt(settings.selectedWallets[w].privateKey).toString(), provider);
-    const base_nonce = await provider.getTransactionCount(wallet.address);
+    const etherWallet = new ethers.Wallet(simpleCrypto.decrypt(wallet.privateKey).toString(), provider);
+    const base_nonce = await provider.getTransactionCount(etherWallet.address);
 
-    const gasLimit = await wallet.estimateGas({
+    const gasLimit = await etherWallet.estimateGas({
       to: settings.contractAddress, 
       data: data,
       value: totalMintCost
@@ -87,7 +89,7 @@ async function prepareTransactions (mintContract: MintContract, settings: Transa
     }
 
     result.push({
-      wallet: settings.selectedWallets[w],
+      wallet: wallet,
       transactions: transactions
     })
   }
@@ -130,7 +132,7 @@ function getParamValue(param?: CustomParam, address?: string) {
 }
 
 export interface PendingTransactionGroup {
-  wallet: IWalletRecord,
+  wallet: IWallet,
   transactions: Promise<TransactionResponse>[]
   resolved: number[]
 }
@@ -159,7 +161,7 @@ async function sendTransactions(groups: TransactionRequestGroup[], node:INodeRec
   return result;
 }
 
-async function sendTransaction(txn: TransactionRequest, wallet:IWalletRecord, node:INodeRecord) : Promise<TransactionResponse> {
+async function sendTransaction(txn: TransactionRequest, wallet:IWallet, node:INodeRecord) : Promise<TransactionResponse> {
   const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
   const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
   const simpleCrypto = new SimpleCrypto(sig);
@@ -167,5 +169,98 @@ async function sendTransaction(txn: TransactionRequest, wallet:IWalletRecord, no
   return provider.sendTransaction(await signer.signTransaction(txn));
 }
 
+async function sendTransactionGroups(
+  groups: ITransactionGroup[], 
+  node: INodeRecord,
+  maxFeePerGas?: string,
+  maxPriorityFeePerGas?: string) : Promise<ITransactionGroup[]> {
 
-export {getReadValue, prepareTransactions, sendTransactions, sendTransaction, getWalletBalance};
+    const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
+
+    for(let g=0; g<groups.length; g++) {
+      const group = groups[g];
+      for(let t=0; t<groups[g].transactions.length; t++) {
+        const trans = group.transactions[t];
+
+        if (maxFeePerGas)
+          trans.request.maxFeePerGas = BigNumber.from(maxFeePerGas)
+        
+        if(maxPriorityFeePerGas)
+          trans.request.maxPriorityFeePerGas = BigNumber.from(maxPriorityFeePerGas)
+
+        trans.status = TransactionStatus.pending;
+        trans.promise = provider.sendTransaction(await group.signer.signTransaction(trans.request))
+      }
+    }
+
+    return groups;
+  }
+
+async function prepareTransactionGroups(
+  mintContract: MintContract, 
+  settings: TransactionState, 
+  node: INodeRecord) : Promise<ITransactionGroup[]> {
+  const resultGroup = new Array<ITransactionGroup>()
+  const provider = new ethers.providers.JsonRpcProvider(node.rpcUrl);
+  const contractInterface = new Interface(mintContract.abiJson)
+  const mintFunctionName = `${settings.mintFunction.name}(${settings.mintFunction.inputs.map(i => i.type).join()})`
+  const mintFunction = contractInterface.functions[mintFunctionName]
+
+  const txnsPerWallet = settings.transactionsPerWallet || 1;
+  const sig = window.sessionStorage.getItem(ROGUE_SESSION_ADDRESS);
+  const simpleCrypto = new SimpleCrypto(sig);
+
+  const totalMintCost = ethers.utils.parseEther(`${settings.totalCost || 0}`);
+
+  for(let w=0; w<settings.selectedWallets.length; w++) {
+    const params = new Array<any>();
+    const wallet = settings.selectedWallets[w]
+
+    if(settings.customParams) {
+      mintFunction.inputs.forEach((x) => {
+        const param = settings.functionParams.find(f => f.name === x.name);
+        params.push(getParamValue(param, wallet.publicKey));
+      })
+    }
+    else if(mintFunction.inputs.length === 1) {
+      params.push(settings.unitsPerTxn);
+    }
+    
+    const data = contractInterface.encodeFunctionData(mintFunction, params);
+
+    const etherWallet = new ethers.Wallet(simpleCrypto.decrypt(wallet.privateKey).toString(), provider);
+    const base_nonce = await provider.getTransactionCount(etherWallet.address);
+    const transactionGroup: ITransactionGroup = {
+      wallet: wallet,
+      signer: etherWallet,
+      transactions: new Array<ITransaction>()
+    }
+
+    for(let i=0; i<txnsPerWallet; i++) {
+      const req: TransactionRequest = {
+        to: settings.contractAddress,
+        value: totalMintCost,
+        nonce: base_nonce + i,
+        data: data,
+        chainId: node.chainId,
+        type: 2,
+        gasLimit: 200000,
+        maxFeePerGas: 0,
+        maxPriorityFeePerGas: 0
+      }
+
+      const txn: ITransaction = {
+        request: req,
+        status: TransactionStatus.pending
+      }
+
+      transactionGroup.transactions.push(txn)
+    }
+
+    resultGroup.push(transactionGroup)
+  }
+
+  return resultGroup
+}
+
+export {getReadValue, prepareTransactions, sendTransactions, sendTransaction, getWalletBalance, prepareTransactionGroups, sendTransactionGroups};

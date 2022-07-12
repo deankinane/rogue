@@ -1,14 +1,15 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { PlusCircleFill, WalletFill } from 'react-bootstrap-icons';
-import { IWalletRecord, WalletContext } from '../../application-state/walletContext/WalletContext';
+import { IWallet } from '../../application-state/walletStore/WalletInterface';
+import { useWalletStore } from '../../application-state/walletStore/WalletStore';
 import AddWalletModal from '../../components/addWalletModal/AddWalletModal';
 import WalletContents from '../../components/walletContents/WalletContents';
 import './WalletManager.css';
 
 function WalletManager() {
   const [addWalletModalVisible, setAddWalletModalVisible] = useState(false);
-  const {wallets, addWallet, updateWalletContents, updateWalletBalances} = useContext(WalletContext);
+  const {wallets, addWallet, updateWalletContents, updateWalletBalances} = useWalletStore()
   const intitialLoad = useRef(true)
 
   useEffect(() => {
@@ -23,14 +24,14 @@ function WalletManager() {
     setAddWalletModalVisible(true);
   }
 
-  function onAddWalletCallback(wallet?: IWalletRecord) {
+  function onAddWalletCallback(wallet?: IWallet) {
     setAddWalletModalVisible(false);
     if(wallet){
       addWallet(wallet)
     }
   }
   
-  // function onDeleteWallet(wallet: IWalletRecord) {
+  // function onDeleteWallet(wallet: IWallet) {
 
   //   setWalletList(walletList.filter(x => x.name !== wallet.name))
   //   setWallets(walletList.filter(x => x.name !== wallet.name));

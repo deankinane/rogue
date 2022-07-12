@@ -1,7 +1,7 @@
 import { FunctionFragment } from 'ethers/lib/utils'
 import React from 'react'
 import { Col, Row } from 'react-bootstrap'
-import { IFlipstateTriggerSettings } from '../../../application-state/taskContext/TaskContext'
+import { IFlipstateTriggerSettings } from '../../../application-state/taskStore/TaskInterfaces'
 import MintContract from '../../../entities/MintContract'
 import { getFunctionNameHex } from '../../../entities/utilityFunctions'
 import FunctionSelector from '../../functionSelector/FunctionSelector'

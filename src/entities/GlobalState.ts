@@ -1,5 +1,5 @@
 import { FunctionFragment } from "ethers/lib/utils";
-import { IWalletRecord } from "../application-state/walletContext/WalletContext";
+import { IWallet } from "../application-state/walletStore/WalletInterface";
 import { ParamTypes } from "./constants";
 
 export interface CustomParam {
@@ -15,12 +15,13 @@ export interface TransactionState {
   contractAddress: string
   mintFunction: FunctionFragment
   functionParams:Array<CustomParam>
-  selectedWallets:IWalletRecord[]
+  selectedWallets:IWallet[]
   unitsPerTxn: number
   pricePerUnit: number
   totalCost: number
   transactionsPerWallet: number,
   maxGasFee: number,
+  maxPriorityFee: number,
   maxSupply: number,
   customParams: boolean
 }
@@ -29,26 +30,28 @@ export interface TransactionStateUpdate {
   contractAddress?: string
   mintFunction?: FunctionFragment
   functionParams?:Array<CustomParam>
-  selectedWallets?:IWalletRecord[]
+  selectedWallets?:IWallet[]
   pricePerUnit?: number
   unitsPerTxn?: number
   totalCost?: number
   transactionsPerWallet?: number,
   maxGasFee?: number,
+  maxPriorityFee?: number,
   maxSupply?: number,
   customParams?: boolean
 }
 
-export const defaultTransactionState = {
+export const defaultTransactionState: TransactionState = {
   unitsPerTxn: 1,
   mintFunction: FunctionFragment.from('temp() view returns (uint256)'),
   transactionsPerWallet: 1,
   pricePerUnit:0,
   totalCost: 0,
-  selectedWallets: new Array<IWalletRecord>(),
+  selectedWallets: new Array<IWallet>(),
   contractAddress: '',
   functionParams: new Array<CustomParam>(),
   maxGasFee: 0,
+  maxPriorityFee: 0,
   maxSupply: 0,
   customParams: false
 }

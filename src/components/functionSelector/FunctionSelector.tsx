@@ -24,6 +24,7 @@ export default function FunctionSelector({label, functions, onFunctionSelected} 
     if (functions)  {
       //setSelectedFunction(functions[idx]);
       onFunctionSelected(functions[idx]);
+      console.log(functions[idx])
       selectField.current?.blur();
     }
   }

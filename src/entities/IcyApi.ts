@@ -1,4 +1,4 @@
-import { ICollectionDetails, INft } from "../application-state/walletContext/WalletContext";
+import { ICollectionDetails, INft } from "../application-state/walletStore/WalletInterface"
 
 const API_BASE_URL:string = 'https://graphql.icy.tools/graphql/';
 

@@ -12,7 +12,7 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import Blocknative from 'bnc-sdk';
 import { Emitter, EthereumTransactionData } from 'bnc-sdk/dist/types/src/interfaces';
 import { BLOCKNATIVE_APPID } from '../../entities/constants';
-import { SettingsContext } from '../../application-state/settingsContext/SettingsContext';
+import { useSettingsStore } from '../../application-state/settingsStore/SettingsStore';
 
 export interface MintStatusModalProps extends PropsWithChildren<any> {
   show: boolean
@@ -40,7 +40,7 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>());
   const [resubmitting, setResubmitting] = useState(false);
   const [complete, setComplete] = useState(false);
-  const {settings} = useContext(SettingsContext)
+  const {settings} = useSettingsStore()
   const [transactionCount, setTransactionCount] = useState(0);
   const completeCount = useRef(0);
   const failedCount = useRef(0);

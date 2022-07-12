@@ -1,4 +1,3 @@
-import { createContext } from "react"
 export interface ICollectionDetails {
   address: string
   name: string
@@ -14,7 +13,7 @@ export interface INft {
   tokenId: string
 }
 
-export interface IWalletRecord {
+export interface IWallet {
   name: string
   privateKey: string
   publicKey: string,
@@ -28,19 +27,10 @@ export interface ICollectionView {
 }
 
 export interface IWalletState {
-  wallets: IWalletRecord[]
+  wallets: IWallet[]
   collections: ICollectionView[],
-  addWallet: (wallet: IWalletRecord) => void
+  addWallet: (wallet: IWallet) => void
   hideCollection: (address: string) => void
   updateWalletContents: () => void
   updateWalletBalances: () => void
 }
-
-export const WalletContext = createContext<IWalletState>({
-  wallets: [],
-  collections: [],
-  addWallet: (wallet: IWalletRecord) => {},
-  hideCollection: (address: string) => {},
-  updateWalletContents: () => {},
-  updateWalletBalances: () => {}
-})

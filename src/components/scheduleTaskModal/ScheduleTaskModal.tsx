@@ -1,7 +1,6 @@
 import React, { PropsWithChildren, useContext, useEffect, useState } from 'react'
 import { Modal, Row, Col, Button } from 'react-bootstrap'
 import { Bullseye, ClockFill, Speedometer2 } from 'react-bootstrap-icons';
-import { TriggerType, IFlipstateTriggerSettings, TaskContext, ITask, TaskStatus, defaultTask } from '../../application-state/taskContext/TaskContext';
 import { TransactionState } from '../../entities/GlobalState'
 import MintContract from '../../entities/MintContract';
 import useToast from '../../hooks/useToast';
@@ -9,6 +8,9 @@ import FlipstateTriggerForm from './flipstateTrigger/FlipstateTriggerForm';
 import TargetValueForm from './targetValue/TargetValueForm';
 import TimeTriggerForm from './timeTrigger/TimeTriggerForm';
 import './ScheduleTaskModal.css';
+import { useTaskStore } from '../../application-state/taskStore/TaskStore';
+import { TriggerType, ITask, defaultTask, TaskStatus, IFlipstateTriggerSettings } from '../../application-state/taskStore/TaskInterfaces';
+import { v4 as uuidv4 } from 'uuid'
 
 export interface ScheduleTaskModalProps extends PropsWithChildren<any> {
   show: boolean
@@ -18,7 +20,7 @@ export interface ScheduleTaskModalProps extends PropsWithChildren<any> {
 }
 
 function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleTaskModalProps) {
-  const {addTask} = useContext(TaskContext)
+  const {addTask} = useTaskStore()
   const [triggerType, setTriggerType] = useState<TriggerType>()
   const [task, setTask] = useState<ITask>(defaultTask)
   const sendToast = useToast()
@@ -55,6 +57,7 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
 
   function onScheduleTaskClicked() {
     if (task.settings) {
+      task.id = uuidv4()
       addTask(task)
       closeModal()
       sendToast('Task Scheduled', `${task.type} task schedule for ${task.contract?.contractName}`, 'success')

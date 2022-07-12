@@ -18,8 +18,8 @@ import useToast from "../../hooks/useToast";
 import ScheduleTaskModal from "../../components/scheduleTaskModal/ScheduleTaskModal";
 import { isBrowser } from 'react-device-detect';
 import CustomFunctionParam from "../../components/customFunctionParam/CustomFunctionParam";
-import { SettingsContext } from "../../application-state/settingsContext/SettingsContext";
-import { IWalletRecord } from "../../application-state/walletContext/WalletContext";
+import { IWallet } from "../../application-state/walletStore/WalletInterface";
+import { useSettingsStore } from "../../application-state/settingsStore/SettingsStore";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
@@ -30,7 +30,7 @@ export default function MintPage() {
   const [sentTransactionRequests, setSentTransactionRequests] = useState<TransactionRequestGroup[]>(new Array<TransactionRequestGroup>());
   const [pendingTransactions, setPendingTransactions] = useState(new Array<PendingTransactionGroup>())
   const [showMintStatusModal, setShowMintStatusModal] = useState(false);
-  const {settings} = useContext(SettingsContext)
+  const {settings} = useSettingsStore()
   const [totalPerWallet, setTotalPerWallet] = useState('');
   const [totalCost, setTotalCost] = useState('');
   const [minting, setMinting] = useState(false);
@@ -77,6 +77,7 @@ export default function MintPage() {
   }
   
   function onMintFunctionSelected(f: FunctionFragment) {
+    
     setMintFunction(f);
     setFindFunction(f.name)
     
@@ -104,7 +105,7 @@ export default function MintPage() {
     });
   }
 
-  function onWalletSelectionChanged(selectedWallets: IWalletRecord[]) {
+  function onWalletSelectionChanged(selectedWallets: IWallet[]) {
     updateTransactionState({
       selectedWallets: selectedWallets
     });
@@ -199,6 +200,9 @@ export default function MintPage() {
   }
 
   function scheduleTaskClicked() {
+    transactionState.mintFunction = mintFunction;
+    transactionState.customParams = needsManualParamSettings;
+    setTransactionState(transactionState)
     setScheduleTaskModal(true);
   }
 
@@ -228,7 +232,7 @@ export default function MintPage() {
               <p className="mt-3">Select Mint Function</p>
                 <FunctionSelector 
                   label="Mint Function"
-                  functions={contract?.payables && contract?.payables.length > 0 ? contract?.payables : contract?.writables} 
+                  functions={contract?.mintcandidates} 
                   onFunctionSelected={onMintFunctionSelected}
                 />
               
@@ -354,7 +358,7 @@ export default function MintPage() {
     />
    <ScheduleTaskModal 
         show={showScheduleTaskModal}
-        transactionState={sentTransactionSettings}
+        transactionState={transactionState}
         onHide={() => {setScheduleTaskModal(false)}}
         contract={contract}
       />

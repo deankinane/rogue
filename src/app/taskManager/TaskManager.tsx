@@ -1,9 +1,10 @@
-import React, { Button } from 'react-bootstrap'
+import React from 'react-bootstrap'
 import { Calendar2DateFill } from 'react-bootstrap-icons'
-import { useTaskContext } from '../../application-state/taskContext/TaskContext'
+import { useTaskStore } from '../../application-state/taskStore/TaskStore'
+import TaskItem from './taskItem/TaskItem'
 
 function TaskManager() {
-  const {tasks, deleteTask} = useTaskContext()
+  const {tasks} = useTaskStore()
 
   return (
     <>
@@ -13,8 +14,8 @@ function TaskManager() {
       </div>
     </div>
     {
-      tasks.map((c,i) => (
-        <div key={i}>{c.type} - {c.contract?.contractName} <Button onClick={() =>  deleteTask(i)}>Cancel</Button></div>
+      tasks.map((t,i) => (
+        <TaskItem key={i} task={t} />
       ))
     }
     </>
