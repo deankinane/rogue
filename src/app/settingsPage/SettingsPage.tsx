@@ -29,27 +29,28 @@ function SettingsPage() {
   }
 
   return (
-    <Form onSubmit={onFormSubmit}>
-      <div className="d-flex mb-4">
-        <h5 className='fw-bold mb-0 flex-grow-1'><GearFill className='me-3'/>Settings</h5>
-        <Button 
-          type='submit'
-          variant='success' 
-          className='mb-4'>
-            <Save className='me-2'/> Save Changes
-        </Button>
-      </div>
-      <Row>
-        <Col>
-          <InputGroup>
-            <InputGroup.Text>
-              RPC Node
-            </InputGroup.Text>
-            <Form.Control defaultValue={updatedSettings.node.rpcUrl}  onChange={v => onNodeUrlChanged(v.currentTarget.value)} required/>
-          </InputGroup>
-        </Col>
-      </Row>
-    </Form>
+    <div className='p-1'>
+      <Form onSubmit={onFormSubmit}>
+        <div className="d-flex pb-4 mb-4 right-panel__section-header">
+          <h5 className='fw-bold flex-grow-1'><GearFill className='me-3'/>Settings</h5>
+          <Button 
+            type='submit'
+            variant='success'>
+              <Save className='me-2'/> Save Changes
+          </Button>
+        </div>
+        <Row>
+          <Col>
+            <InputGroup>
+              <InputGroup.Text>
+                RPC Node
+              </InputGroup.Text>
+              <Form.Control defaultValue={updatedSettings.node.rpcUrl}  onChange={v => onNodeUrlChanged(v.currentTarget.value)} required/>
+            </InputGroup>
+          </Col>
+        </Row>
+      </Form>
+    </div>
   )
 }
 

@@ -19,13 +19,19 @@ export interface IFlipstateTriggerSettings {
   triggerFunction: string
 }
 
+export interface IGroupResult {
+  name: string
+  results: number[]
+}
+
 export interface ITask {
   id: string
   contract: MintContract
   type: TriggerType
   settings: IFlipstateTriggerSettings
   transactionSettings: TransactionState
-  status: TaskStatus
+  status: TaskStatus,
+  results?: IGroupResult[]
 }
 
 export const defaultTask: ITask = {

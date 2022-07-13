@@ -21,7 +21,7 @@ export interface ScheduleTaskModalProps extends PropsWithChildren<any> {
 
 function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleTaskModalProps) {
   const {addTask} = useTaskStore()
-  const [triggerType, setTriggerType] = useState<TriggerType>()
+  const [triggerType, setTriggerType] = useState<TriggerType>(TriggerType.flipstate)
   const [task, setTask] = useState<ITask>(defaultTask)
   const sendToast = useToast()
 
@@ -58,6 +58,11 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
   function onScheduleTaskClicked() {
     if (task.settings) {
       task.id = uuidv4()
+      task.transactionSettings.selectedWallets.sort((w1, w2) => {
+        var textA = w1.name.toUpperCase();
+        var textB = w2.name.toUpperCase();
+        return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+      })
       addTask(task)
       closeModal()
       sendToast('Task Scheduled', `${task.type} task schedule for ${task.contract?.contractName}`, 'success')
@@ -82,7 +87,7 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
           <Row className='g-2 mt-2'>
             <Col xs={12} xl={4}>
               <div className={'task-trigger-type-button h-100' + buttonActiveClass(TriggerType.flipstate)} onClick={() => onSetTriggerType(TriggerType.flipstate)}>
-                <div className='task-trigger-type-button_title mb-2'><Speedometer2 className='me-3' size='20'/><span>Flipstate</span></div>
+                <div className='task-trigger-type-button_title mb-2'><Speedometer2 className='me-3' size='20'/><span>Flip State</span></div>
                 <p>Monitor the contract for a function call that enables the mint and attempt to queue transactions immediately afterwards in the same block.</p>
               </div>
             </Col>
