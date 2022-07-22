@@ -8,9 +8,10 @@ import './WalletItem.css'
 
 export interface WalletItemProps {
   nft: INft
+  disableControls?: boolean
 }
 
-function WalletItem({nft}:WalletItemProps) {
+function WalletItem({nft, disableControls}:WalletItemProps) {
   const {hideCollection} = useWalletStore()
 
   const [image, setImage] = useState('')
@@ -23,11 +24,13 @@ function WalletItem({nft}:WalletItemProps) {
   }, [nft])
 
   function onMouseEnter() {
-    setHover(true)
+    if (!disableControls)
+      setHover(true)
   }
 
   function onMouseLeave() {
-    setHover(false)
+    if (!disableControls)
+      setHover(false)
   }
 
   function confirmHideCollection() {
@@ -41,16 +44,20 @@ function WalletItem({nft}:WalletItemProps) {
     :
     <>
     
-    <div className='wallet-item' onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <div className='wallet-item m-2' onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <div className='wallet-item-img'>
-        <div className={'wallet-item-overlay d-flex justify-content-center' + (hover ? ' hover' : '')}>
-          <Button 
-            onClick={() => setShowModal(true)}
-            variant='secondary' 
-            title='Hide Collection' 
-            className='me-2'><EyeSlashFill /></Button>
-          <Button variant='secondary' title='Consolidate'><ArchiveFill /></Button>
-        </div>
+        {
+          disableControls ? <></> :
+          <div className={'wallet-item-overlay d-flex justify-content-center' + (hover ? ' hover' : '')}>
+            <Button 
+              onClick={() => setShowModal(true)}
+              variant='secondary' 
+              title='Hide Collection' 
+              className='me-2'><EyeSlashFill /></Button>
+            <Button variant='secondary' title='Consolidate'><ArchiveFill /></Button>
+          </div>
+        }
+        
         <img src={image} alt={nft.name} className={hover ? 'hover' : ''} />
       </div>
       <div className='wallet-item-content'>

@@ -30,7 +30,8 @@ export interface IWalletState {
   wallets: IWallet[]
   collections: ICollectionView[],
   addWallet: (wallet: IWallet) => void
+  deleteWallet: (wallet: IWallet) => void
   hideCollection: (address: string) => void
-  updateWalletContents: () => void
-  updateWalletBalances: () => void
+  updateWalletContents: () => Promise<void>
+  updateWalletBalances: () => Promise<void>
 }

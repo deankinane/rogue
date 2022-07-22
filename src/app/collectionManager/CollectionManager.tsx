@@ -1,7 +1,7 @@
 import React from 'react'
 import { CollectionFill } from 'react-bootstrap-icons'
 import { useWalletStore } from '../../application-state/walletStore/WalletStore'
-import CollectionView from '../../components/collectionView/CollectionView'
+import CollectionView from './collectionView/CollectionView'
 
 function CollectionManager() {
   const {collections} = useWalletStore()

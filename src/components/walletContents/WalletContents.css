@@ -1,5 +1,6 @@
 .wallet-container {
-  border-bottom: 1px solid #4b396c6b
+  border-bottom: 1px solid #4b396c6b;
+  font-size: 0.9rem;
 }
 
 .wallet-container-header {

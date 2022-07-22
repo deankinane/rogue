@@ -1,11 +1,11 @@
 import { ethers } from 'ethers';
 import React, { FormEvent, useContext, useState } from 'react'
 import { Button, Form, Modal, ModalProps, Spinner } from 'react-bootstrap'
-import { getWalletBalance } from '../../entities/ProviderFunctions';
+import { getWalletBalance } from '../../../entities/ProviderFunctions';
 import SimpleCrypto from 'simple-crypto-js';
-import { UserContext } from '../../application-state/userContext/UserContext';
-import { useWalletStore } from '../../application-state/walletStore/WalletStore';
-import { IWallet } from '../../application-state/walletStore/WalletInterface';
+import { UserContext } from '../../../application-state/userContext/UserContext';
+import { useWalletStore } from '../../../application-state/walletStore/WalletStore';
+import { IWallet } from '../../../application-state/walletStore/WalletInterface';
 
 interface AddWalletModalProps extends ModalProps {
   callback: (wallet?: IWallet ) => void
@@ -59,7 +59,7 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
     >
       <Modal.Header closeButton>
         <Modal.Title id="contained-modal-title-vcenter">
-          Add New Wallet
+          Import Wallet
         </Modal.Title>
       </Modal.Header>
       <Form onSubmit={onAddButtonClicked}>
@@ -86,9 +86,9 @@ function AddWalletModal({callback, ...props}: AddWalletModalProps) {
         <Button 
           type='submit' 
           variant='success' 
-          style={{'width': '103px'}}
+          style={{'width': '120px'}}
           disabled={working}>
-            {working ? <Spinner size='sm' animation="border" /> : 'Save Wallet'}
+            {working ? <Spinner size='sm' animation="border" /> : 'Import Wallet'}
           </Button>
       </Modal.Footer>
       </Form>

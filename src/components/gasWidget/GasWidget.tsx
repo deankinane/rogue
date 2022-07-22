@@ -8,9 +8,10 @@ import './GasWidget.css';
 
 export interface GasWidgetProps {
   onGasPriceChanged: (gasPrice: number) => void
+  simple?: boolean
 }
 
-function GasWidget({onGasPriceChanged} : GasWidgetProps) {
+function GasWidget({onGasPriceChanged, simple} : GasWidgetProps) {
   const [gwei, setGwei] = useState<EthGasPrice>({base:0, max:0});
   const [extraGas, setExtraGas] = useState(10);
 
@@ -27,21 +28,27 @@ function GasWidget({onGasPriceChanged} : GasWidgetProps) {
 
   return (
     <>
-      <InputGroup className="mb-1">
+      <InputGroup>
         <InputGroup.Text>
           <img className='gas-widget__icon' alt="gas-icon" src='./img/gas-pump.svg' />
           <span className='gas-widget__gwei ms-2'>Fast: {gwei.max}</span>
         </InputGroup.Text>
-        <Button 
-          variant='info' 
-          onClick={() => onExtraGasChanged(10)} 
-          className={(extraGas === 10 ? ' gas-widget__input--active' : '')}
-          >+ 10</Button>
-        <Button 
-          variant='info' 
-          onClick={() => onExtraGasChanged(20)} 
-          className={(extraGas === 20 ? ' gas-widget__input--active' : '')}
-          >+ 20</Button>
+        {
+          simple ? <></> :
+          <>
+          <Button 
+            variant='info' 
+            onClick={() => onExtraGasChanged(10)} 
+            className={(extraGas === 10 ? ' gas-widget__input--active' : '')}
+            >+ 10</Button>
+          <Button 
+            variant='info' 
+            onClick={() => onExtraGasChanged(20)} 
+            className={(extraGas === 20 ? ' gas-widget__input--active' : '')}
+            >+ 20</Button>
+          </>
+        }
+        
         <FormControl 
           type='number' 
           step={5}
@@ -57,16 +64,12 @@ function GasWidget({onGasPriceChanged} : GasWidgetProps) {
             Max: {gwei.max + extraGas}
           </span>
         </InputGroup.Text>
-        {/* <InputGroup.Text >
-          <span className='widget__icon'>
-            <FlagFill />
-          </span>
-          <span className='gas-widget__gwei ms-1'>
-            EPF: {extraGas}
-          </span>
-        </InputGroup.Text> */}
+       
       </InputGroup>
-      <p className='gas-widget__estimate'>Estimate per txn: {ethers.utils.formatUnits(BigNumber.from((gwei.max+extraGas)*100000), 'gwei')} ETH</p>
+      {
+        simple ? <></> :
+        <p className='gas-widget__estimate mt-1'>Estimate per txn: {ethers.utils.formatUnits(BigNumber.from((gwei.max+extraGas)*100000), 'gwei')} ETH</p>
+      }
     </>
   )
 }

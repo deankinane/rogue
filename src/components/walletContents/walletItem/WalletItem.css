@@ -1,6 +1,6 @@
 .wallet-item {
   height: 100%;
-  width: calc(100%/4) !important;
+  width: calc(100%/4 - 1rem) !important;
   box-shadow: 0 6px 15px 0 rgb(0 0 0 / 28%);
 }
 
@@ -60,6 +60,6 @@
 
 @media only screen and (max-width: 2460px) {
   .wallet-item {
-    width: calc(100%/3) !important;
+    width: calc(100%/3 - 1rem) !important;
   }
 }

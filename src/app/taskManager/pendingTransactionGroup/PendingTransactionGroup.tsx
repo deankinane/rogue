@@ -12,7 +12,6 @@ function PendingTransactionGroup({group, index, onGroupComplete}:PendingTransact
   const [results, setResults] = useState(new Array<number>(group.transactions.length))
 
   function onTransactionResolved(idx:number, result: TransactionStatus) {
-    debugger
     txnStates[idx] = true
     results[idx] = result
     if (txnStates.findIndex(x => x !== true) < 0) {

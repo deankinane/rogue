@@ -136,6 +136,8 @@ async function loadWalletContents(address:string, after?:string): Promise<INft[]
 
   const data = await queryApi(request)
   
+  if (!data.wallet) return []
+
   data.wallet.tokens.edges.forEach((x:any) => {
     let img = x.node.images.find((x:any) => x.width === 200);
     if (!img) {
@@ -164,6 +166,33 @@ async function loadWalletContents(address:string, after?:string): Promise<INft[]
   return items
 }
 
+async function getFloorPrice(address: string): Promise<number> {
+  const request: GraphQLRequest = {
+    query: `
+    query ERC721Contract($address: String!) {
+      contract(address: $address) {
+        ... on ERC721Contract {
+          stats {
+            floor
+          }
+        }
+      }
+    }`,
+    variables: {
+      address: address
+    }
+  }
+
+  const data = await queryApi(request);
+  let floorPrice = 0
+
+  if (data.contract) {
+    floorPrice = data.contract.stats.floor
+  }
+
+  return floorPrice;
+}
+
 async function queryApi(request: GraphQLRequest) {
   const response = await fetch(API_BASE_URL, {
     method: 'POST',
@@ -180,4 +209,4 @@ async function queryApi(request: GraphQLRequest) {
   return (await response.json()).data;
 }
 
-export {loadCollectionDetails, loadWalletContents, loadTrendingMints}
+export {loadCollectionDetails, loadWalletContents, loadTrendingMints, getFloorPrice}

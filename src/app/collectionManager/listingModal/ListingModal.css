@@ -1,0 +1,31 @@
+.listing-modal p {
+  font-size: 0.9rem;
+}
+
+.listing-modal-title {
+
+}
+
+.listing-modal-title img {
+  height: 48px;
+  border-radius: 0.25rem;
+}
+
+.listing-modal-title p {
+  font-weight: bold;
+  margin: 0;
+  font-size: 1rem;
+}
+
+p.listing-modal-title__subtitle {
+  font-size: 1rem;
+  font-weight: 300;
+}
+
+.listing-price-group {
+  width: auto !important;
+}
+
+.listing-price-input {
+  max-width: 90px;
+}

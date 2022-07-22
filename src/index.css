@@ -213,6 +213,29 @@ body::-webkit-scrollbar {
 }
 
 
+.btn-action {
+  color: rgb(255, 255, 255);
+  background: #5f2f99;
+  border: none;
+  padding: 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 100;
+  line-height: 0.5rem;
+}
+
+.btn-action:hover {
+  background: #552c87;
+}
+
+.btn-action:focus {
+  box-shadow:none;
+}
+
+.btn-action:active {
+  background: #552c87;
+  box-shadow: 0 0 0 0.15rem #552c87 !important;
+}
+
 .bg-img-1 {
   position: absolute;
   left: auto;
@@ -431,6 +454,24 @@ input {
   max-width: calc(100% - 700px - 430px);
 }
 
+.icon-button {
+  padding: 0.3rem 0.5rem;
+  transition: all ease-in-out 200ms;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.7rem;
+  border-radius: 0.25rem;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.153);
+}
+
+.icon-button:active {
+  
+}
+
+
 @media only screen and (max-width: 2460px) {
   .main-content-area {
     max-width: calc(100% - 560px - 430px);
@@ -480,4 +521,19 @@ input {
     flex: 0 0 auto;
     width: 100%;
   }
+}
+
+
+.flex-grow-2 {
+  flex-grow: 2 !important;
+}
+.flex-grow-3 {
+  flex-grow: 3 !important;
+}
+
+.svg-icon {
+  display: inline-block;
+    line-height: 1rem;
+    height: 1.4rem;
+    width: 1.4rem;
 }

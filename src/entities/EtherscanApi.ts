@@ -1,5 +1,5 @@
-// const BaseUrl: string = 'https://api.etherscan.io/api?';
-const BaseUrl: string = 'https://api-rinkeby.etherscan.io/api?';
+const BaseUrl: string = 'https://api.etherscan.io/api?';
+// const BaseUrl: string = 'https://api-rinkeby.etherscan.io/api?';
 const ApiKey: string = 'HDWIFT1YENSISZPJ8RU6P6PUFMZIEHX5WS';
 
 async function getCurrentGas(): Promise<string> {

@@ -1,4 +1,4 @@
-import { TransactionRequest, TransactionResponse } from "@ethersproject/providers";
+import { TransactionRequest, TransactionResponse, TransactionReceipt } from "@ethersproject/providers";
 import { BigNumber, Contract, ethers } from "ethers";
 import SimpleCrypto from "simple-crypto-js";
 import { ParamTypes } from "./constants";
@@ -22,7 +22,6 @@ async function getReadValue(mintContract : MintContract, func:string, node: INod
 async function getWalletBalance(address:string) : Promise<string> {
   const provider = new ethers.providers.Web3Provider(window.ethereum);  
   const balance = await provider.getBalance(address)
-  
   return parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
 }
 
@@ -263,4 +262,25 @@ async function prepareTransactionGroups(
   return resultGroup
 }
 
-export {getReadValue, prepareTransactions, sendTransactions, sendTransaction, getWalletBalance, prepareTransactionGroups, sendTransactionGroups};
+async function disperseEth(wallets: string[], totalAmount: number): Promise<TransactionReceipt> {
+  
+  var abi = new Interface([
+    'function disperse(address[] calldata wallets) payable external'
+  ])
+  var provider = new ethers.providers.Web3Provider(window.ethereum)
+  var contract = new Contract('0x2f42E899e61e8e959DbEa546b0c39589D49834Ed', abi, provider.getSigner())
+  
+  const gas = await contract.estimateGas.disperse(wallets, {
+    value: ethers.utils.parseEther(totalAmount.toString())
+  })
+
+  const tx = await contract.disperse(wallets, {
+    value: ethers.utils.parseEther(totalAmount.toString()),
+    gasLimit: gas
+  })
+
+  const rec = await tx.wait()
+  return rec;
+}
+
+export {getReadValue, prepareTransactions, sendTransactions, sendTransaction, getWalletBalance, prepareTransactionGroups, sendTransactionGroups, disperseEth};

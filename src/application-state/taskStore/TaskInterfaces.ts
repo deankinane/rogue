@@ -17,6 +17,7 @@ export enum TaskStatus {
 
 export interface IFlipstateTriggerSettings {
   triggerFunction: string
+  caller: string
 }
 
 export interface IGroupResult {
@@ -39,7 +40,8 @@ export const defaultTask: ITask = {
   contract: new MintContract(''),
   type: TriggerType.flipstate,
   settings: {
-    triggerFunction: ''
+    triggerFunction: '',
+    caller: ''
   },
   status: TaskStatus.waiting,
   transactionSettings: defaultTransactionState

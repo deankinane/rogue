@@ -24,12 +24,13 @@ async function addWallet(Wallet:IWallet) {
   await updateWalletContents()
 }
 
-// function deleteWallet(WalletIndex: number): IWallet[] {
-//   const updated = [...getWallets()]
-//   updated.splice(WalletIndex, 1)
-//   WalletLocalStore.setData(updated)
-//   return updated
-// }
+function deleteWallet(wallet: IWallet): IWallet[] {
+  const updated = [...getWallets()]
+  const idx = updated.findIndex(w => w.publicKey === wallet.publicKey)
+  updated.splice(idx, 1)
+  WalletLocalStore.setData(updated)
+  return updated
+}
 
 // function updateWallet(WalletIndex: number, Wallet: IWallet): IWallet[] {
 //   const updated = [...getWallets()]
@@ -58,7 +59,7 @@ function hideCollection(address: string) {
 async function updateWalletBalances() {
   const storedWallets = [...getWallets()]
   for(let i=0; i<storedWallets.length; i++) {
-    storedWallets[i].balance = await getWalletBalance(storedWallets[i].publicKey);      
+    storedWallets[i].balance = await getWalletBalance(storedWallets[i].publicKey);   
   }
   
   WalletLocalStore.setData(storedWallets)
@@ -67,7 +68,7 @@ async function updateWalletBalances() {
 async function updateWalletContents() {
   const updated = [...getWallets()]
   const hidden = [...HiddenCollectionLocalStore.getData()]
-
+  
   for(let i=0; i<updated.length; i++) {
     updated[i].contents = await loadWalletContents(updated[i].publicKey);
 
@@ -102,4 +103,4 @@ function updateCollections(wallets: IWallet[]) {
   CollectionLocalStore.setData(collections)
 }
 
-export  {getWallets, getCollections, addWallet, hideCollection, updateWalletBalances, updateWalletContents}
+export  {getWallets, getCollections, addWallet, hideCollection, updateWalletBalances, updateWalletContents, deleteWallet}

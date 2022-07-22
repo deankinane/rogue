@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useContext, useEffect, useState } from 'react'
+import React, { PropsWithChildren,  useEffect, useState } from 'react'
 import { Modal, Row, Col, Button } from 'react-bootstrap'
 import { Bullseye, ClockFill, Speedometer2 } from 'react-bootstrap-icons';
 import { TransactionState } from '../../entities/GlobalState'
@@ -111,7 +111,7 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
         <div className="modal-section mt-3">
           {
             triggerType === TriggerType.flipstate ?
-            <FlipstateTriggerForm contract={contract} onSettingsUpdate={onSettingsUpdate} />
+            <FlipstateTriggerForm contract={contract} caller={transactionState.owner} onSettingsUpdate={onSettingsUpdate} />
             : <></>
           }
           {

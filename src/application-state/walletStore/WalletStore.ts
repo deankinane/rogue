@@ -1,6 +1,6 @@
 import create from 'zustand'
 import { IWallet, IWalletState } from './WalletInterface'
-import { addWallet, getCollections, getWallets, hideCollection, updateWalletBalances, updateWalletContents } from './WalletStoreLocal'
+import { addWallet, deleteWallet, getCollections, getWallets, hideCollection, updateWalletBalances, updateWalletContents } from './WalletStoreLocal'
 
 
 export const useWalletStore = create<IWalletState>()(
@@ -9,6 +9,10 @@ export const useWalletStore = create<IWalletState>()(
     collections: getCollections(),
     async addWallet(wallet: IWallet) {
       await addWallet(wallet)
+      set((state) => ({wallets: getWallets(), collections: getCollections()}))
+    },
+    async deleteWallet(wallet: IWallet) {
+      deleteWallet(wallet)
       set((state) => ({wallets: getWallets(), collections: getCollections()}))
     },
     hideCollection(address: string) {

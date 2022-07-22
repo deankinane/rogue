@@ -1,0 +1,10 @@
+[ ] Wallet generation
+[ ] ETH dispersement
+[ ] Open Sea listing with laddering
+[ ] Improved Collection Screen
+[ ] Value Trigger Task
+[ ] Time Trigger Task
+[ ] Rarity/Trait Info
+[ ] Trending Mints
+[ ] Trending Collections
+[ ] Discover Contracts

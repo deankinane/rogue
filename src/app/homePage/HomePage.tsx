@@ -24,6 +24,7 @@ function HomePage() {
     setShowBuyButton(!result);
     setLoading(false);
   }
+
   return (
     <Container>
       <Row className='m-4'>

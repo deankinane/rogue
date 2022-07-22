@@ -1,7 +1,7 @@
 import Blocknative from 'bnc-sdk'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Spinner } from 'react-bootstrap'
-import { ArrowRightShort, CaretDownFill, CaretRight, CaretRightFill, CaretUpFill, CheckSquareFill } from 'react-bootstrap-icons'
+import { ArrowRightShort, CaretDownFill, CaretRightFill, CaretUpFill, CheckSquareFill } from 'react-bootstrap-icons'
 import { useSettingsStore } from '../../../application-state/settingsStore/SettingsStore'
 import { IGroupResult, TaskStatus } from '../../../application-state/taskStore/TaskInterfaces'
 import { useTaskStore } from '../../../application-state/taskStore/TaskStore'
@@ -22,7 +22,7 @@ function FlipStateTaskItem({task}:TaskItemProps) {
   const blocknative = useRef<Blocknative>(
     new Blocknative({
       dappId: BLOCKNATIVE_APPID,
-      networkId: 4,
+      networkId: 1,
       onerror: e => console.log('error', e)
     })
   )
@@ -41,7 +41,7 @@ function FlipStateTaskItem({task}:TaskItemProps) {
       console.log('txn detected')
       const txnData = txn as any;
       
-      if (txnData && txnData.input.startsWith(task.settings.triggerFunction)) {     
+      if (txnData && txnData.input.startsWith(task.settings.triggerFunction) && txnData.from === task.settings.caller) {     
         task.status = TaskStatus.running
         updateTask(task)
         run(txnData.maxFeePerGas, txnData.maxPriorityFeePerGas)

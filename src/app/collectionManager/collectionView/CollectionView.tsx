@@ -1,8 +1,13 @@
 import React, {  useState } from 'react'
 import { Button, Row } from 'react-bootstrap'
 import { CaretDownFill, CaretUpFill } from 'react-bootstrap-icons'
-import { ICollectionView } from '../../application-state/walletStore/WalletInterface'
-import WalletItem from '../walletContents/walletItem/WalletItem'
+import { useSettingsStore } from '../../../application-state/settingsStore/SettingsStore'
+import { ICollectionView } from '../../../application-state/walletStore/WalletInterface'
+import { useWalletStore } from '../../../application-state/walletStore/WalletStore'
+import { X2Y2Icon } from '../../../components/icons'
+
+import WalletItem from '../../../components/walletContents/walletItem/WalletItem'
+import ListingModal from '../listingModal/ListingModal'
 import './CollectionView.css'
 
 export interface CollectionViewProps {
@@ -10,6 +15,13 @@ export interface CollectionViewProps {
 }
 function CollectionView({collectionView}: CollectionViewProps) {
   const [collapsed, setCollapsed] = useState(true)
+  const {wallets} = useWalletStore()
+  const {settings} = useSettingsStore()
+  const [showListingModal, setShowListingModal] = useState(false)
+
+  function listForSale() {
+    setShowListingModal(true)
+  }
 
   return (
     collectionView.collection.hidden
@@ -21,23 +33,25 @@ function CollectionView({collectionView}: CollectionViewProps) {
           <img src={collectionView.collection.logo} alt={`${collectionView.collection.name} logo`} />
         </div>
         <div className='collection-view__details flex-grow-1'>
-          {collectionView.collection.name}
+          <div className='fw-bold'>{collectionView.collection.name}</div>
+          <div className='text-secondary'>{collectionView.tokens.length} items</div>
         </div>
-        <div className='collection-view__details'>
-          {collectionView.tokens.length} items
-        </div>
+        <Button 
+          variant='dark'
+          onClick={listForSale}><X2Y2Icon className='me-2'/> List for Sale</Button>
         <Button 
           variant='dark'
           className='m-3'
           onClick={() => setCollapsed(x => (!x))}>{collapsed ? <CaretDownFill />: <CaretUpFill />}</Button>
       </div>
       <div className={`collection-view__collapse mb-3 ${collapsed ? '' : 'expanded'}`}>
-        <Row className='g-3'>
+        <Row className='g-0'>
           {
             collectionView.tokens.map((x,i) => <WalletItem key={i} nft={x} />)
           }
         </Row>
       </div>
+      <ListingModal callback={() => {setShowListingModal(false)}} show={showListingModal} collection={collectionView} />
     </>
   )
 }

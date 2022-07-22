@@ -23,7 +23,8 @@ export interface TransactionState {
   maxGasFee: number,
   maxPriorityFee: number,
   maxSupply: number,
-  customParams: boolean
+  customParams: boolean,
+  owner: string
 }
 
 export interface TransactionStateUpdate {
@@ -38,7 +39,8 @@ export interface TransactionStateUpdate {
   maxGasFee?: number,
   maxPriorityFee?: number,
   maxSupply?: number,
-  customParams?: boolean
+  customParams?: boolean,
+  owner?: string
 }
 
 export const defaultTransactionState: TransactionState = {
@@ -53,5 +55,6 @@ export const defaultTransactionState: TransactionState = {
   maxGasFee: 0,
   maxPriorityFee: 0,
   maxSupply: 0,
-  customParams: false
+  customParams: false,
+  owner: ''
 }

@@ -20,6 +20,7 @@ import { isBrowser } from 'react-device-detect';
 import CustomFunctionParam from "../../components/customFunctionParam/CustomFunctionParam";
 import { IWallet } from "../../application-state/walletStore/WalletInterface";
 import { useSettingsStore } from "../../application-state/settingsStore/SettingsStore";
+import WalletSelectorAlt from "../../components/walletSelector/WalletSelectorAlt";
 
 export default function MintPage() {
   const [contract, setContract] = useState<MintContract>();
@@ -163,6 +164,12 @@ export default function MintPage() {
     });
   }
 
+  function onOwnerLoaded(value: string) {
+    updateTransactionState({
+      owner: value
+    });
+  }
+
   function invalidConfiguration(): boolean {
     return contract === undefined 
       || transactionState.selectedWallets.length === 0
@@ -293,7 +300,7 @@ export default function MintPage() {
               <Card.Body className="d-flex flex-column">
                 <div>              
                   <p>Select Wallets</p>
-                  <WalletSelector onWalletSelectionChanged={onWalletSelectionChanged}/>     
+                  <WalletSelectorAlt onWalletSelectionChanged={onWalletSelectionChanged}/> 
                 </div>
                 <p className="mt-3">Mint Summary</p>
                 <InputGroup className="justify-content-end">
@@ -333,7 +340,8 @@ export default function MintPage() {
                     contract={contract} 
                     onSetUnitPriceClicked={onSetUnitPriceClicked} 
                     onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked}
-                    onMaxSupplyLoaded={onMaxSupplyLoaded} />)
+                    onMaxSupplyLoaded={onMaxSupplyLoaded}
+                    onOwnerLoaded={onOwnerLoaded} />)
                 )
                   
                 : <Card className="w-100 p-3">Read only values will display here</Card>
