@@ -1,9 +1,10 @@
 import React, { FormEvent, useState } from 'react'
 import { ModalProps, Modal, Form, Button, Spinner, Row, FormControl, InputGroup } from 'react-bootstrap'
 import { useSettingsStore } from '../../../application-state/settingsStore/SettingsStore';
-import { ICollectionView, INft, IWallet } from '../../../application-state/walletStore/WalletInterface';
+import { ICollectionView, IWallet } from '../../../application-state/walletStore/WalletInterface';
 import { useWalletStore } from '../../../application-state/walletStore/WalletStore';
 import { getFloorPrice } from '../../../entities/IcyApi';
+import { listToken } from '../../../entities/X2Y2';
 import ApprovalWidget from './approvalWidget/ApprovalWidget';
 import ListingItem, { ListItem } from './listingItem/ListingItem';
 import './ListingModal.css'
@@ -25,16 +26,24 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
   const [highPrice, setHighPrice] = useState(0.1)
   const [selectedCount, setSelectedCount] = useState(0)
   const [floorPrice, setFloorPrice] = useState(0)
+  const [listingLength, _setListingLength] = useState(12)
+  const [currentItem, setCurrentItem] = useState(0)
 
   function onModalOpened() {
     const addresses = wallets.filter(w => (
         w.contents.findIndex(n => n.collection.address === collection.collection.address) > -1
       ))
       setCollectionWallets(x => addresses)
-      setItems(collection.tokens.map<ListItem>(t => ({token: t, price: 0, selected: false})))
+      setItems(collection.tokens.map<ListItem>(t => ({token: t, price: 0, selected: false, wallet: wallets.find(w => w.contents.findIndex(n => n.tokenId === t.tokenId) > -1) as any})))
       setSelectedCount(0)
       setOpening(true)
       updateFloorPrice()
+  }
+
+  function setListingLength(val: string) {
+    // if (val === '') _setListingLength(0.1)
+    // else _setListingLength(parseFloat(val))
+    _setListingLength(parseFloat(val))
   }
 
   async function updateFloorPrice() {
@@ -48,8 +57,18 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
     callback()
   }
 
-  async function onAddButtonClicked(e: FormEvent) {
-    e.preventDefault();
+  async function onListButtonClicked(e: FormEvent) {
+    setWorking(true)
+    e.preventDefault()
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].selected) {
+        setCurrentItem(i => i+1)
+        await listToken(items[i].token, items[i].wallet, items[i].price, listingLength)
+      }
+    }
+
+    setWorking(false)
   }
 
   function onItemSelectionChanged(item: ListItem, selected: boolean) {
@@ -68,7 +87,6 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
   }
 
   function onApplyClick() {
-    
     if (highPrice<lowPrice) {
       return
     }
@@ -101,7 +119,8 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
 
   function onSelectHalf() {
     const newItems = [...items]
-    newItems.forEach(i => i.selected = true)
+    const half = Math.floor(newItems.length / 2)
+    newItems.forEach((n,i) => n.selected = i<half)
     setItems(x => newItems)
     setSelectedCount(newItems.length)
   }
@@ -133,7 +152,7 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
           </div>
         </Modal.Title>
       </Modal.Header>
-      <Form onSubmit={onAddButtonClicked}>
+      <Form onSubmit={onListButtonClicked}>
       <Modal.Body>
         {
           approvalsNeeded ? 
@@ -168,7 +187,7 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
               className='listing-price-input'
               type='number' 
               min={0}
-              step={0.005}
+              step={0.0001}
               value={lowPrice}
               onChange={v => setLowPrice(parseFloat(v.currentTarget.value))}
               />
@@ -182,7 +201,7 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
               className='listing-price-input'
               type='number' 
               min={0}
-              step={0.005}
+              step={0.0001}
               value={highPrice}
               onChange={v => setHighPrice(parseFloat(v.currentTarget.value))}
               />
@@ -208,18 +227,42 @@ function ListingModal({callback, collection, ...props}: ListingModalProps) {
                                   onPriceChanged={p => onItemPriceChanged(x,p)}/>)
           }
         </Row>
+        <div className='d-flex justify-content-end mt-3'>
+          <InputGroup className='listing-price-group'>
+              <InputGroup.Text>
+                Listing Length
+              </InputGroup.Text>
+              <FormControl 
+                className='listing-price-input'
+                type='number' 
+                min={0}
+                max={9999}
+                step={1}
+                value={listingLength}
+                onChange={e => setListingLength(e.currentTarget.value)}
+                />
+                <InputGroup.Text>
+                  hours
+                </InputGroup.Text>
+          </InputGroup>
+        </div>
+        
       </div>
       : <></>
      }
 
       </Modal.Body>
       <Modal.Footer>
-        <p className='text-muted me-3'>{selectedCount} items selected</p>
+        {
+          working ?
+          <p className='text-muted me-3'>`Listing item {currentItem} of {selectedCount}...`</p>
+          : <p className='text-muted me-3'>{selectedCount} items selected</p>
+        }
         <Button 
           type='submit' 
           variant='success' 
           style={{'width': '160px'}}
-          disabled={working || approvalsNeeded}
+          disabled={working || approvalsNeeded || selectedCount === 0}
           >
             {working ? <Spinner size='sm' animation="border" /> : 'List Items on X2Y2'}
           </Button>

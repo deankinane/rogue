@@ -1,3 +1,4 @@
+import { Contract, ethers } from "ethers";
 import { FunctionFragment, Interface } from "ethers/lib/utils";
 import { FragmentTypes, FunctionTypes } from "./constants";
 import { getContractSource } from "./EtherscanApi";
@@ -9,6 +10,7 @@ class MintContract {
   contractSource: string = "";
   contractSlug: string = "";
   contractLogo: string = "";
+  owner: string = ''
   abi: Interface | null = null;
   abiJson: any = {}
   payables: FunctionFragment[];
@@ -53,6 +55,11 @@ class MintContract {
     }
     this.abiJson = JSON.parse(data.ABI)
     this.abi = new Interface(this.abiJson)
+
+    const prov = new ethers.providers.Web3Provider(window.ethereum)
+    const con = new Contract(this.address, this.abi, prov)
+    
+    this.owner = await con.owner()
 
     // Find the payable and writable functions in the contract
     this.abi.fragments.forEach(f => {

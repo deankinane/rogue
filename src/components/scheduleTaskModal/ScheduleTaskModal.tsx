@@ -111,7 +111,7 @@ function ScheduleTaskModal({show, onHide, transactionState, contract}: ScheduleT
         <div className="modal-section mt-3">
           {
             triggerType === TriggerType.flipstate ?
-            <FlipstateTriggerForm contract={contract} caller={transactionState.owner} onSettingsUpdate={onSettingsUpdate} />
+            <FlipstateTriggerForm contract={contract} onSettingsUpdate={onSettingsUpdate} />
             : <></>
           }
           {

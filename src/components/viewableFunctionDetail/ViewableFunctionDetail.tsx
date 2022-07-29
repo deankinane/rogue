@@ -15,7 +15,6 @@ export interface ViewableFunctionDetailProps {
   onSetUnitPriceClicked:(value: string) => void
   onSetUnitsPerTxnClicked:(value: string) => void
   onMaxSupplyLoaded:(value: number) => void
-  onOwnerLoaded:(value: string) => void
 }
 
 export default function ViewableFunctionDetail({
@@ -23,9 +22,8 @@ export default function ViewableFunctionDetail({
   functionFragment, 
   onSetUnitPriceClicked, 
   onSetUnitsPerTxnClicked,
-  onMaxSupplyLoaded,
-  onOwnerLoaded
-}: ViewableFunctionDetailProps) {
+  onMaxSupplyLoaded
+  }: ViewableFunctionDetailProps) {
   const [value, setValue] = useState("-");
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState('');
@@ -65,20 +63,11 @@ export default function ViewableFunctionDetail({
     if (isMaxSupply()) {
       onMaxSupplyLoaded(parseInt(val));
     }
-
-    if(isOWner()) {
-      onOwnerLoaded(val[0])
-    }
   }
 
   function isMaxSupply(): boolean {
     const nameNormalised = functionFragment.name.toUpperCase();
     return nameNormalised.indexOf('MAX') > -1 && nameNormalised.indexOf('SUPPLY') > -1;
-  }
-
-  function isOWner(): boolean {
-    const nameNormalised = functionFragment.name.toUpperCase();
-    return nameNormalised === 'OWNER'
   }
 
   return (

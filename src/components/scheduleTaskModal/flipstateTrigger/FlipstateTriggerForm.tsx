@@ -1,24 +1,22 @@
 import { FunctionFragment } from 'ethers/lib/utils'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Col, FormControl, InputGroup, Row } from 'react-bootstrap'
 import { IFlipstateTriggerSettings } from '../../../application-state/taskStore/TaskInterfaces'
 import MintContract from '../../../entities/MintContract'
-import { getFunctionNameHex } from '../../../entities/utilityFunctions'
 import FunctionSelector from '../../functionSelector/FunctionSelector'
 
 export interface FlipstateTriggerFormProps {
   contract?: MintContract
-  caller: string
   onSettingsUpdate: (settings:IFlipstateTriggerSettings) => void
 }
-function BackrunTriggerForm({contract, caller, onSettingsUpdate}:FlipstateTriggerFormProps) {
+function BackrunTriggerForm({contract, onSettingsUpdate}:FlipstateTriggerFormProps) {
   const [settings, setSettings] = useState<IFlipstateTriggerSettings>({
-    triggerFunction: getFunctionNameHex(contract?.writables[0].name || ''),
-    caller: caller
+    triggerFunction: contract?.abi?.getSighash(contract?.writables[0].name) || '',
+    caller: contract?.owner || ''
   })
 
   function onFunctionSelected(f:FunctionFragment) {
-    const updated = {...settings, triggerFunction : getFunctionNameHex(f.name)}
+    const updated = {...settings, triggerFunction : contract?.abi?.getSighash(f.name) || ''}
     setSettings(updated)
     onSettingsUpdate(updated)
   }
@@ -43,7 +41,7 @@ function BackrunTriggerForm({contract, caller, onSettingsUpdate}:FlipstateTrigge
         <Col xs={12} xl={6}>
           <InputGroup>
             <InputGroup.Text>Caller</InputGroup.Text>
-            <FormControl defaultValue={caller} onChange={e => setAllowedCaller(e.currentTarget.value)} />
+            <FormControl defaultValue={contract?.owner} onChange={e => setAllowedCaller(e.currentTarget.value)} />
           </InputGroup>
         </Col>
       </Row>

@@ -7,12 +7,14 @@ import getCurrentGas, { EthGasPrice } from '../../entities/GasNowApi';
 import useRecursiveTimeout from '../../hooks/useRecursiveTimeout';
 import { LightningChargeFill } from 'react-bootstrap-icons';
 import { TransactionState } from '../../entities/GlobalState';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { TransactionReceipt } from '@ethersproject/providers';
-import Blocknative from 'bnc-sdk';
+// import Blocknative from 'bnc-sdk';
 import { Emitter, EthereumTransactionData } from 'bnc-sdk/dist/types/src/interfaces';
-import { BLOCKNATIVE_APPID } from '../../entities/constants';
+// import { BLOCKNATIVE_APPID } from '../../entities/constants';
 import { useSettingsStore } from '../../application-state/settingsStore/SettingsStore';
+import { Network, Alchemy } from 'alchemy-sdk'
+import { formatUnits } from 'ethers/lib/utils';
 
 export interface MintStatusModalProps extends PropsWithChildren<any> {
   show: boolean
@@ -52,7 +54,11 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
     _90: 0,
     _100: 0
   });
-  const blocknative = useRef<Blocknative>();
+  // const blocknative = useRef<Blocknative>();
+  const alchemy = useRef(new Alchemy({
+    apiKey: 'ViwLDYJlpoOPyIVQU-ZpQazW23fWUe_X',
+    network: Network.ETH_MAINNET
+  }))
   const txnEmitter = useRef<Emitter>();
   const [effPrioFee, setEffPrioFee] = useState(0);
   const [currentlyBeating, setCurrentlyBeating] = useState(0);
@@ -73,34 +79,54 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
 
   function onShown() {
 
-    blocknative.current = new Blocknative({
-      dappId: BLOCKNATIVE_APPID,
-      networkId: 1,
-      onerror: e => console.log('error', e)
-    });
+    alchemy.current.ws.on(
+      {
+        method: 'alchemy_pendingTransactions',
+        toAddress: transactionState.contractAddress,
+        hashesOnly: false
+      },
+      res => {
+        analyseTransaction(res)
+      }
+    )
 
-    const account = blocknative.current.account(transactionState.contractAddress)
-    txnEmitter.current = account.emitter;
-
-    txnEmitter.current.on("txPool", txn => {
-      analyseTransaction(txn as EthereumTransactionData)
-    })
-    
     gasDistUpdateInterval.current = setInterval(updateGasProbabilityEstimates,2000)
     
     setComplete(false);
   }
+
+  // function onShown() {
+
+  //   blocknative.current = new Blocknative({
+  //     dappId: BLOCKNATIVE_APPID,
+  //     networkId: 1,
+  //     onerror: e => console.log('error', e)
+  //   });
+
+  //   const account = blocknative.current.account(transactionState.contractAddress)
+  //   txnEmitter.current = account.emitter;
+
+  //   txnEmitter.current.on("txPool", txn => {
+  //     analyseTransaction(txn as EthereumTransactionData)
+  //   })
+    
+  //   gasDistUpdateInterval.current = setInterval(updateGasProbabilityEstimates,2000)
+    
+  //   setComplete(false);
+  // }
 
   function updateGasProbabilityEstimates() {
     if(gasDistribution.current.length === 0) return;
 
     let sorted = gasDistribution.current.map(x => getEPF(x.max, x.priority))
     sorted.sort((x, y) => x - y);
-
+    
     if (importantTxnCount.current > 0 && sorted.length > importantTxnCount.current) {
       sorted = sorted.slice(sorted.length - importantTxnCount.current);
     }
 
+    console.log(sorted)
+    
     const _100 = sorted.length-1;
     const _90 = Math.min(Math.ceil(sorted.length * 0.90), sorted.length - 1);
     const _80 = Math.min(Math.ceil(sorted.length * 0.80), sorted.length - 1);
@@ -129,12 +155,12 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   }
 
 
-  function analyseTransaction(txn: EthereumTransactionData) {
+  function analyseTransaction(txn: any) {
     
-    if (txn.maxPriorityFeePerGasGwei && txn.maxFeePerGasGwei) {
+    if (txn.maxPriorityFeePerGas && txn.maxFeePerGas) {
       gasDistribution.current.push({
-        max: txn.maxFeePerGasGwei,
-        priority: txn.maxPriorityFeePerGasGwei
+        max: Math.ceil(parseFloat(formatUnits(BigNumber.from(txn.maxFeePerGas), 'gwei'))),
+        priority: Math.ceil(parseFloat(formatUnits(BigNumber.from(txn.maxPriorityFeePerGas), 'gwei')))
       });
     }
   }
@@ -166,8 +192,9 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
   }
 
   function resetState() {
-    txnEmitter.current?.off('txPool');
-    blocknative.current?.unsubscribe(transactionState.contractAddress)
+    // txnEmitter.current?.off('txPool');
+    // blocknative.current?.unsubscribe(transactionState.contractAddress)
+    alchemy.current.ws.removeAllListeners()
 
     clearInterval(gasDistUpdateInterval.current);
     setPendingTransactions(new Array<PendingTransactionGroup>());
@@ -189,8 +216,9 @@ function MintStatusModal({show, onHide, transactionRequestGroups, pendingTransac
 
     if (completeCount.current+failedCount.current === transactionCount) {
       setComplete(true);
-      txnEmitter.current?.off('txPool');
-      blocknative.current?.unsubscribe(transactionState.contractAddress)
+      // txnEmitter.current?.off('txPool');
+      // blocknative.current?.unsubscribe(transactionState.contractAddress)
+      alchemy.current.ws.removeAllListeners()
       clearInterval(gasDistUpdateInterval.current);
     }
   }

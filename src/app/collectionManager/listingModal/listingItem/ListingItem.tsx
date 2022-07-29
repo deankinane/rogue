@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Col, Form } from 'react-bootstrap'
-import { INft } from '../../../../application-state/walletStore/WalletInterface'
+import { INft, IWallet } from '../../../../application-state/walletStore/WalletInterface'
 import './ListingItem.css'
 
 interface ListingItemProps {
@@ -11,6 +11,7 @@ interface ListingItemProps {
 
 export interface ListItem {
   token: INft
+  wallet: IWallet
   price: number
   selected: boolean
 }

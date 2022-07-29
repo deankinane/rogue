@@ -471,6 +471,10 @@ input {
   
 }
 
+.card-section-header {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
 
 @media only screen and (max-width: 2460px) {
   .main-content-area {

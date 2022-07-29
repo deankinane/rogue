@@ -8,7 +8,6 @@ import { Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstr
 import GasWidget from "../../components/gasWidget/GasWidget";
 import { CustomParam, defaultTransactionState, TransactionState, TransactionStateUpdate } from "../../entities/GlobalState";
 import { FunctionFragment } from "ethers/lib/utils";
-import WalletSelector from "../../components/walletSelector/WalletSelector";
 import { Triangle } from "react-bootstrap-icons";
 import { PendingTransactionGroup, prepareTransactions, sendTransactions, TransactionRequestGroup } from "../../entities/ProviderFunctions";
 import MintStatusModal from "../../components/mintStatusModal/MintStatusModal";
@@ -164,12 +163,6 @@ export default function MintPage() {
     });
   }
 
-  function onOwnerLoaded(value: string) {
-    updateTransactionState({
-      owner: value
-    });
-  }
-
   function invalidConfiguration(): boolean {
     return contract === undefined 
       || transactionState.selectedWallets.length === 0
@@ -230,13 +223,13 @@ export default function MintPage() {
           <Card  className="h-100">
             <Card.Body>
               <div>
-                <p className="mb-0">Load Contract</p>
+                <p className="mb-0 card-section-header">Load Contract</p>
               </div>
               
             
               <ContractSearchBar onContractLoaded={onSearchContract} />
               <div className="clearfix"></div>
-              <p className="mt-3">Select Mint Function</p>
+              <p className="mt-3 card-section-header">Select Mint Function</p>
                 <FunctionSelector 
                   label="Mint Function"
                   functions={contract?.mintcandidates} 
@@ -250,7 +243,7 @@ export default function MintPage() {
           <Col xs={12} className='col-hd-6 col-2k-4'>
             <Card className="h-100">
               <Card.Body>
-                <p className="mb-0">Set Transaction Parameters</p>
+                <p className="mb-0 card-section-header">Set Transaction Parameters</p>
                 <Row className="g-2 mt-2">
                   <Col xs={12} xl={6}>
                     <InputGroup>
@@ -283,14 +276,14 @@ export default function MintPage() {
                 {
                   needsManualParamSettings && mintFunction.inputs.length > 0 ? (
                     <>
-                      <p className="mt-3">Custom Function Parameters</p>
+                      <p className="mt-3 card-section-header">Custom Function Parameters</p>
                       {mintFunction?.inputs.map((x,i) => <CustomFunctionParam functionParam={x} key={i} onParamUpdated={onMintFunctionParamChanged} />)
                       }
                     </>
                   )
                   : <></> 
                 }
-                <p className="mt-3">Choose Gas Settings</p>
+                <p className="mt-3 card-section-header">Choose Gas Settings</p>
                 <GasWidget onGasPriceChanged={onGasFeeChanged}/>
               </Card.Body>
             </Card>
@@ -299,10 +292,10 @@ export default function MintPage() {
             <Card className="h-100">
               <Card.Body className="d-flex flex-column">
                 <div>              
-                  <p>Select Wallets</p>
+                  <p className="card-section-header">Select Wallets</p>
                   <WalletSelectorAlt onWalletSelectionChanged={onWalletSelectionChanged}/> 
                 </div>
-                <p className="mt-3">Mint Summary</p>
+                <p className="mt-3 card-section-header">Mint Summary</p>
                 <InputGroup className="justify-content-end">
                   <InputGroup.Text className="flex-grow-1">Total Mints: {transactionState.unitsPerTxn * transactionState.transactionsPerWallet * transactionState.selectedWallets.length}</InputGroup.Text>
                   <InputGroup.Text>Per Wallet: {totalPerWallet} ETH</InputGroup.Text>
@@ -341,7 +334,7 @@ export default function MintPage() {
                     onSetUnitPriceClicked={onSetUnitPriceClicked} 
                     onSetUnitsPerTxnClicked={onSetUnitsPerTxnClicked}
                     onMaxSupplyLoaded={onMaxSupplyLoaded}
-                    onOwnerLoaded={onOwnerLoaded} />)
+                    />)
                 )
                   
                 : <Card className="w-100 p-3">Read only values will display here</Card>

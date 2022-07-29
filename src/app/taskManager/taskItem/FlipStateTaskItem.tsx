@@ -1,4 +1,5 @@
-import Blocknative from 'bnc-sdk'
+import { Network, Alchemy } from 'alchemy-sdk'
+// import Blocknative from 'bnc-sdk'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Spinner } from 'react-bootstrap'
 import { ArrowRightShort, CaretDownFill, CaretRightFill, CaretUpFill, CheckSquareFill } from 'react-bootstrap-icons'
@@ -6,7 +7,7 @@ import { useSettingsStore } from '../../../application-state/settingsStore/Setti
 import { IGroupResult, TaskStatus } from '../../../application-state/taskStore/TaskInterfaces'
 import { useTaskStore } from '../../../application-state/taskStore/TaskStore'
 import { ITransactionGroup } from '../../../common/ITransaction'
-import { BLOCKNATIVE_APPID } from '../../../entities/constants'
+// import { BLOCKNATIVE_APPID } from '../../../entities/constants'
 import { sendTransactionGroups, prepareTransactionGroups } from '../../../entities/ProviderFunctions'
 import PendingTransactionGroup from '../pendingTransactionGroup/PendingTransactionGroup'
 import ResultGroup from '../resultGroup/ResultGroup'
@@ -19,40 +20,85 @@ function FlipStateTaskItem({task}:TaskItemProps) {
   const [transactionGroups, setTransactionGroups] = useState<ITransactionGroup[]>([])
   const [groupStates, setGroupStates] = useState<boolean[]>([])
   const transactionGroupsRef = useRef<ITransactionGroup[]>([])
-  const blocknative = useRef<Blocknative>(
-    new Blocknative({
-      dappId: BLOCKNATIVE_APPID,
-      networkId: 1,
-      onerror: e => console.log('error', e)
-    })
-  )
+  // const blocknative = useRef<Blocknative>(
+  //   new Blocknative({
+  //     dappId: BLOCKNATIVE_APPID,
+  //     networkId: 1,
+  //     onerror: e => console.log('error', e)
+  //   })
+  // )
+  const alchemy = useRef(new Alchemy({
+    apiKey: 'ViwLDYJlpoOPyIVQU-ZpQazW23fWUe_X',
+    network: Network.ETH_MAINNET
+  }))
 
-  useEffect(() => {
-    if(task.status !== TaskStatus.waiting) {
-      return;
-    }
+useEffect(() => {
+  if(task.status !== TaskStatus.waiting) {
+    return;
+  }
 
-    createTransactionGroups()
+  createTransactionGroups()
 
-    const client = blocknative.current;
-    const account = client.account(task.contract.address)
-    console.log('subscribed', task.contract.address)
-    account.emitter.on("txPool", txn => {
-      console.log('txn detected')
-      const txnData = txn as any;
+  const alchemyWs = alchemy.current
+  alchemyWs.ws.on(
+    {
+      method: 'alchemy_pendingTransactions',
+      toAddress: task.contract.address,
+      fromAddress: task.settings.caller,
+      hashesOnly: false
+    },
+    res => {
+      console.log({
+        hash: res.hash,
+        from: res.from,
+        data: res.input
+      })
+      // const txnData = txn as any;
       
-      if (txnData && txnData.input.startsWith(task.settings.triggerFunction) && txnData.from === task.settings.caller) {     
+      if (res && res.input.startsWith(task.settings.triggerFunction)) {     
         task.status = TaskStatus.running
         updateTask(task)
-        run(txnData.maxFeePerGas, txnData.maxPriorityFeePerGas)
+        run(res.maxFeePerGas, res.maxPriorityFeePerGas)
       }
-    })
-
-    return () => {
-      console.log('unsubscribe')
-      client.unsubscribe(task.contract.address)
     }
-  },[task])
+  )
+
+  console.log('subscribed', task.contract.address, task.settings.triggerFunction, task.settings.caller)
+  
+  return () => {
+    console.log('unsubscribe')
+    alchemyWs.ws.removeAllListeners()
+  }
+},[task])
+
+  // useEffect(() => {
+  //   if(task.status !== TaskStatus.waiting) {
+  //     return;
+  //   }
+
+  //   createTransactionGroups()
+
+  //   const client = blocknative.current;
+  //   const account = client.account(task.contract.address)
+    
+  //   console.log('subscribed', task.contract.address, task.settings.triggerFunction, task.settings.caller)
+    
+  //   account.emitter.on("txPool", txn => {
+  //     console.log('Txn', txn)
+  //     const txnData = txn as any;
+      
+  //     if (txnData && txnData.input.startsWith(task.settings.triggerFunction) && txnData.from === task.settings.caller) {     
+  //       task.status = TaskStatus.running
+  //       updateTask(task)
+  //       run(txnData.maxFeePerGas, txnData.maxPriorityFeePerGas)
+  //     }
+  //   })
+
+  //   return () => {
+  //     console.log('unsubscribe')
+  //     client.unsubscribe(task.contract.address)
+  //   }
+  // },[task])
 
   async function createTransactionGroups() {
     const groups = await prepareTransactionGroups(task.contract, task.transactionSettings, settings.node)
@@ -61,18 +107,16 @@ function FlipStateTaskItem({task}:TaskItemProps) {
   }
 
   async function run(maxFeePerGas: string, maxPriorityFeePerGas: string) {
-    console.log(transactionGroupsRef.current)
 
     if (transactionGroupsRef.current.length === 0) return
-
     task.status = TaskStatus.running
     updateTask(task)
     transactionGroupsRef.current = await sendTransactionGroups(transactionGroupsRef.current, settings.node, maxFeePerGas, maxPriorityFeePerGas)
     setTransactionGroups(transactionGroupsRef.current)
-    console.log(transactionGroupsRef.current)
     setCollapsed(false)
     console.log('unsubscribe')
-    blocknative.current.unsubscribe(task.contract.address)
+    // blocknative.current.unsubscribe(task.contract.address)
+    alchemy.current.ws.removeAllListeners()
   }
 
   function onGroupComplete(index: number, results:number[]) {

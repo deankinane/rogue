@@ -21,14 +21,14 @@ function WalletContents({wallet, idx}: WalletContentsProps) {
 
   function deleteWalletClick() {
     // TODo add confiurmation
-    //deleteWallet(wallet)
+    // deleteWallet(wallet)
   }
 
   return (
     <div className='wallet-container mb-2'>
       <div className='d-flex wallet-container-header mb-2 align-items-baseline'>
-        <div>Burner {idx+1}</div>
-        <div className='flex-grow-1 text-secondary ms-3'>{wallet.name}</div>
+        <div>{wallet.name}</div>
+        <div className='flex-grow-1 text-secondary ms-3'>{wallet.publicKey.substring(0,5)}...{wallet.publicKey.substring(39,42)}</div>
         <div className='text-secondary'>{wallet.balance} ETH</div>
         <div  
           className='icon-button ms-2'
